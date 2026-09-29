@@ -37,7 +37,7 @@ begin
   end loop;
   return jsonb_build_object(
     'code', s->>'code', 'host', s->>'host', 'phase', s->>'phase',
-    'round', s->'round', 'version', s->'version', 'turn', s->>'turn', 'finished_at', s->>'finished_at',
+    'round', s->'round', 'version', s->'version', 'turn', s->>'turn', 'finished_at', (s->>'finished_at')::timestamptz,
     'players', out_players, 'me', me->>'id',
     'assignment', case when s->>'phase' = 'choosing' then me->>'target' else null end,
     'submitted', exists(select 1 from jsonb_array_elements(s->'players') x where x->>'id' = me->>'target' and coalesce(x->>'identity','') <> '')
