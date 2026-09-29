@@ -7,14 +7,14 @@ const port = Number((portIndex >= 0 ? process.argv[portIndex + 1] : null) || pro
 http.createServer(async (req, res) => {
   if (req.url === '/api/game') {
     let body = '';
-    for await (const chunk of req) { body += chunk; if (body.length > 4096) { res.writeHead(413).end(); return; } }
+    for await (const chunk of req) { body += chunk; if (body.length > 22000) { res.writeHead(413).end(); return; } }
     req.body = body;
     res.status = function(code) { this.statusCode = code; return this; };
     res.json = function(data) { this.setHeader('Content-Type', 'application/json'); this.end(JSON.stringify(data)); };
     return handler(req, res);
   }
   const name = new URL(req.url, 'http://localhost').pathname;
-  const allowed = ['index.html', 'style.css', 'app.js', 'favicon.svg'];
+  const allowed = ['index.html', 'style.css', 'app.js', 'theme.js', 'favicon.svg'];
   const file = name === '/' ? 'index.html' : name.slice(1);
   if (!allowed.includes(file)) { res.writeHead(404).end('Não encontrado'); return; }
   try { res.setHeader('Content-Type', types[file.slice(file.lastIndexOf('.'))]); res.end(await readFile(file)); }

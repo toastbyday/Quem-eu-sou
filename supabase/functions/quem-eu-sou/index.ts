@@ -13,11 +13,11 @@ Deno.serve(async (request: Request) => {
   if (request.method !== 'POST') return reply({ error: 'Use POST.' }, 405);
   try {
     const raw = await request.text();
-    if (raw.length > 4096) return reply({ error: 'Pedido muito grande.' }, 413);
+    if (raw.length > 22000) return reply({ error: 'Pedido muito grande.' }, 413);
     let body;
     try { body = JSON.parse(raw); } catch { return reply({ error: 'Pedido inválido.' }, 400); }
     if (!body || typeof body !== 'object' || !/^[0-9a-f]{64}$/.test(body.token || '')) return reply({ error: 'Sessão inválida.' }, 401);
-    if (!['create','join','state','list','start','assign','ready','guessed','giveup','kick','leave'].includes(body.action)) return reply({ error: 'Ação inválida.' }, 400);
+    if (!['create','join','state','list','start','assign','ready','guessed','giveup','kick','leave','profile'].includes(body.action)) return reply({ error: 'Ação inválida.' }, 400);
     if (!['create','list'].includes(body.action) && !/^[0-9A-F]{6}$/.test(body.code || '')) return reply({ error: 'O código precisa ter 6 caracteres.' }, 400);
     const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(body.token));
     const hash = [...new Uint8Array(digest)].map(n => n.toString(16).padStart(2,'0')).join('');
@@ -25,6 +25,11 @@ Deno.serve(async (request: Request) => {
     if (['create','join'].includes(body.action)) {
       if (typeof body.nick !== 'string') return reply({ error: 'Informe seu nick.' },400);
       payload.nick = body.nick.replace(/[\u0000-\u001f\u007f]/g,'').trim().slice(0,20);
+    }
+    if (['create','join','profile'].includes(body.action)) {
+      const photo = body.avatar || '';
+      if (typeof photo !== 'string' || photo.length > 18000 || (photo && !/^data:image\/jpeg;base64,\/9j\/[A-Za-z0-9+/=]+$/.test(photo))) return reply({ error: 'Foto inválida.' },400);
+      payload.avatar = photo;
     }
     if (body.action === 'assign') {
       if (typeof body.identity !== 'string') return reply({ error: 'Informe o nome secreto.' },400);

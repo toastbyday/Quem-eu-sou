@@ -3,17 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#111413">
+  <meta name="theme-color" content="#f5f5f5">
   <meta name="description" content="Escolha uma identidade para seus amigos, faça perguntas na call e descubra quem você é. Um jogo online para 2 a 12 pessoas.">
   <title>Quem eu sou? — Jogue com seus amigos</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script src="/theme.js"></script>
   <link rel="stylesheet" href="/style.css">
   <script type="module" src="/app.js"></script>
 </head>
 <body>
   <header class="site-header">
     <a class="brand" href="/" aria-label="Quem eu sou? início"><span class="brand-mark">?</span><span>quem eu sou<span class="lime">?</span></span></a>
-    <div class="header-right"><span id="nick-label"></span><button id="help-button" class="icon-button" aria-label="Como jogar">?</button></div>
+    <div class="header-right"><button id="profile-button" class="profile-button" aria-label="Mudar foto de perfil"></button><span id="nick-label"></span><div class="theme-switch" role="group" aria-label="Modo de aparência"><button type="button" data-theme-choice="light" aria-pressed="false">Light</button><button type="button" data-theme-choice="dark" aria-pressed="false">Dark</button></div><button id="help-button" class="icon-button" aria-label="Como jogar">?</button></div>
   </header>
   <main id="app" tabindex="-1"></main>
   <footer><span>Um nome. Muitas perguntas.</span><span>Feito para jogar junto.</span></footer>
@@ -29,6 +30,7 @@
     </form>
     <p class="fine">Sem conta, sem senha. Só você e seus amigos.</p>
   </dialog>
+  <dialog id="profile-dialog" class="dialog" aria-labelledby="profile-title"><div class="dialog-top"><span class="eyebrow">SEU PERFIL</span><button id="close-profile" class="icon-button" aria-label="Fechar perfil">×</button></div><h2 id="profile-title">Foto de perfil</h2><p>Escolha uma foto para aparecer ao lado do seu nick nas salas.</p><div id="profile-preview" class="profile-preview"></div><form id="profile-form" class="profile-form"><label for="profile-file">Escolher foto</label><input id="profile-file" type="file" accept="image/jpeg,image/png,image/webp"><p id="profile-message" role="status">JPG, PNG ou WebP · até 8 MB.</p><div class="button-row"><button type="submit" class="button primary" id="save-profile">Salvar foto</button><button type="button" class="button secondary" id="remove-profile">Remover foto</button></div></form></dialog>
   <dialog id="help-dialog" class="dialog" aria-labelledby="help-title">
     <div class="dialog-top"><span class="eyebrow">AS REGRAS</span><button class="icon-button" id="close-help" aria-label="Fechar regras">×</button></div>
     <h2 id="help-title">Quem será você?</h2>
@@ -36,7 +38,7 @@
       <li><strong>Junte a galera.</strong> Crie uma sala ou entre em uma das salas ativas. De 2 a 12 jogadores.</li>
       <li><strong>Guarde o segredo.</strong> Cada pessoa recebe outro jogador, por sorteio, e escolhe uma identidade para ele.</li>
       <li><strong>Pergunte na call.</strong> Você vê as identidades de todos, menos a sua. Na sua vez, faça uma pergunta e toque em Pronto.</li>
-      <li><strong>Descubra quem é.</strong> Depois que a galera confirmar seu acerto na call, toque em Acertei. Você fica verde e sai dos turnos. Também pode desistir.</li>
+      <li><strong>Descubra quem é.</strong> Depois que a galera confirmar seu acerto na call, toque em Acertei. Seu acerto fica marcado e você sai dos turnos. Também pode desistir.</li>
       <li><strong>Jogue de novo.</strong> Quando todos terminarem, começa uma nova rodada. O anfitrião pode antecipar o início.</li>
     </ol>
     <div class="notice">A conversa acontece na call de vocês. Este site organiza a partida; não inclui chamada de voz.</div>

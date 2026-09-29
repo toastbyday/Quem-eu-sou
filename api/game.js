@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Use POST.' });
   try {
     const payload = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    if (!payload || JSON.stringify(payload).length > 4096) return res.status(400).json({ error: 'Pedido inválido.' });
+    if (!payload || JSON.stringify(payload).length > 22000) return res.status(400).json({ error: 'Pedido inválido.' });
     const result = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: publicKey },

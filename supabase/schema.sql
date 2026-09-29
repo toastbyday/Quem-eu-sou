@@ -28,7 +28,7 @@ begin
   me := s->'players'->actor;
   for p in select value from jsonb_array_elements(s->'players') loop
     out_players := out_players || jsonb_build_array(jsonb_build_object(
-      'id', p->>'id', 'nick', p->>'nick', 'status', p->>'status',
+      'id', p->>'id', 'nick', p->>'nick', 'avatar', coalesce(p->>'avatar',''), 'status', p->>'status',
       'online', (p->>'seen')::timestamptz > now() - interval '25 seconds',
       'ready', coalesce(p->>'identity', '') <> '',
       'identity', case when idx <> actor and s->>'phase' in ('playing','finished') then p->>'identity' else null end
@@ -56,7 +56,7 @@ declare
   rate game_private.requests%rowtype;
 begin
   if token_hash is null or token_hash !~ '^[0-9a-f]{64}$' then raise exception 'Sessão inválida.'; end if;
-  if action not in ('create','join','state','list','start','assign','ready','guessed','giveup','kick','leave') or action is null then raise exception 'Ação inválida.'; end if;
+  if action not in ('create','join','state','list','start','assign','ready','guessed','giveup','kick','leave','profile') or action is null then raise exception 'Ação inválida.'; end if;
   insert into game_private.requests(token_hash) values(qes_game.token_hash) on conflict do nothing;
   select * into rate from game_private.requests r where r.token_hash = qes_game.token_hash for update;
   if action in ('state','list') then
@@ -82,6 +82,7 @@ begin
       ) active
     ), '[]'::jsonb));
   end if;
+  if action in ('create','join','profile') and (length(coalesce(payload->>'avatar','')) > 18000 or (coalesce(payload->>'avatar','') <> '' and payload->>'avatar' !~ '^data:image/jpeg;base64,/9j/[A-Za-z0-9+/=]+$')) then raise exception 'Foto inválida.'; end if;
   if action = 'create' then
     if rate.day = current_date and rate.created_rooms >= 20 then raise exception 'Limite diário de salas atingido.'; end if;
     if length(btrim(payload->>'nick')) not between 2 and 20 or payload->>'nick' is null then raise exception 'Use um nick entre 2 e 20 caracteres.'; end if;
@@ -91,7 +92,7 @@ begin
     loop
       candidate := upper(substr(replace(gen_random_uuid()::text, '-', ''),1,6));
       new_id := gen_random_uuid()::text;
-      p := jsonb_build_object('id', new_id, 'token', token_hash, 'nick', btrim(payload->>'nick'), 'status','active','identity','','seen',now_text);
+      p := jsonb_build_object('id', new_id, 'token', token_hash, 'avatar',coalesce(payload->>'avatar',''), 'nick', btrim(payload->>'nick'), 'status','active','identity','','seen',now_text);
       s := jsonb_build_object('code', candidate, 'host', new_id, 'phase','lobby','round',0,'version',0,'turn',null,'banned','[]'::jsonb,'players',jsonb_build_array(p));
       insert into game_private.rooms(code,state) values(candidate,s) on conflict do nothing;
       exit when found;
@@ -113,7 +114,7 @@ begin
     if n >= 12 then raise exception 'A sala está cheia (12 jogadores).'; end if;
     if length(btrim(payload->>'nick')) not between 2 and 20 or payload->>'nick' is null then raise exception 'Use um nick entre 2 e 20 caracteres.'; end if;
     if exists(select 1 from jsonb_array_elements(players) x where lower(x->>'nick') = lower(btrim(payload->>'nick'))) then raise exception 'Este nick já está na sala.'; end if;
-    p := jsonb_build_object('id',gen_random_uuid()::text,'token',token_hash,'nick',btrim(payload->>'nick'),'status','waiting','identity','','seen',now_text);
+    p := jsonb_build_object('id',gen_random_uuid()::text,'token',token_hash,'avatar',coalesce(payload->>'avatar',''),'nick',btrim(payload->>'nick'),'status','waiting','identity','','seen',now_text);
     players := players || jsonb_build_array(p);
     actor := n;
     n := n+1;
@@ -124,6 +125,9 @@ begin
   p := players->actor;
   old_turn := s->>'turn';
 
+  if action = 'profile' then
+    players := jsonb_set(players,array[actor::text,'avatar'],to_jsonb(coalesce(payload->>'avatar','')));
+  end if;
   if action = 'start' then
     if p->>'id' <> s->>'host' and not (s->>'phase' = 'finished' and (s->>'finished_at')::timestamptz <= now() - interval '10 seconds') then raise exception 'Só o anfitrião pode começar.'; end if;
     if s->>'phase' not in ('lobby','finished') then raise exception 'A rodada já está em andamento.'; end if;

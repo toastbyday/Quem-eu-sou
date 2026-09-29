@@ -9,3 +9,85 @@
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
 .active-rooms{display:flex;flex-direction:column;gap:10px;max-height:380px;overflow:auto}.room-list-item{display:flex;gap:12px;justify-content:space-between;align-items:center;padding:14px;border:1px solid var(--line);border-radius:14px;background:#111713}.room-list-item>div{min-width:0}.room-list-item strong{display:block;font-size:.95rem;overflow-wrap:anywhere}.room-list-item span,.room-list-item small{display:block;color:var(--muted);font-size:.8rem;margin-top:6px}.room-list-item .button{flex-shrink:0;padding:12px 16px}.rooms-message{padding:22px 14px;border:1px dashed var(--line);border-radius:14px;color:var(--muted);font-size:.9rem;line-height:1.6}
+
+/* Aparência: controles persistentes e tema claro inspirado na referência. */
+.theme-switch{display:flex;gap:4px;padding:4px;background:var(--raised);border:1px solid var(--line);border-radius:18px;flex-shrink:0}
+.theme-switch button{min-height:36px;padding:8px 12px;border:0;border-radius:18px;background:transparent;color:var(--muted);font-size:14px;font-weight:500}
+.theme-switch button[aria-pressed=true]{background:var(--text);color:var(--bg)}
+:root[data-theme=light]{color-scheme:light;--bg:#f5f5f5;--surface:#fff;--raised:#fafafa;--line:#e5e5e5;--text:#0a0a0a;--muted:#737373;--lime:#0a0a0a;--ink:#fafafa;--red:#e7000b;--green:#15803d;font-feature-settings:"ss01" on,"cv11" on}
+[data-theme=light] body{background:#f5f5f5;background-image:none}
+[data-theme=light] h1{font-size:48px;font-weight:600;letter-spacing:-.05em;line-height:1.1}
+[data-theme=light] h2,[data-theme=light] h3{font-weight:600;letter-spacing:-.025em}
+[data-theme=light] .eyebrow,[data-theme=light] .card-step{letter-spacing:.05em;color:var(--muted)}
+[data-theme=light] .action-card,[data-theme=light] .main-panel,[data-theme=light] .sidebar,[data-theme=light] .dialog{border-radius:24px;box-shadow:0 0 0 1px #1717170d,0 1px 3px #0000000d,0 1px 2px -1px #0000000d}
+[data-theme=light] .action-card.featured{transform:none;background:#fff;color:var(--text);border-color:var(--line)}
+[data-theme=light] .action-card.featured p{color:var(--muted)}
+[data-theme=light] .brand-mark,[data-theme=light] .big-symbol{background:#171717;color:#fafafa;transform:none;border-radius:18px}
+[data-theme=light] .button{border-radius:18px;font-weight:500;font-size:14px;box-shadow:none}
+[data-theme=light] .button.dark,[data-theme=light] .button.primary{background:#0a0a0a;color:#fafafa}
+[data-theme=light] .button.dark:hover,[data-theme=light] .button.primary:hover{background:#262626}
+[data-theme=light] .button.secondary{background:#f5f5f5;border-color:transparent;color:#0a0a0a}
+[data-theme=light] .button.secondary:hover{background:#e5e5e5}
+[data-theme=light] .button.danger{background:#fff;color:#e7000b;border-color:#e5e5e5}
+[data-theme=light] input{background:#f5f5f5;color:#0a0a0a;border-color:transparent;border-radius:18px;font-size:16px}
+[data-theme=light] input:focus{background:#fff;border-color:#e5e5e5;outline:1px solid #e5e5e5;outline-offset:0}
+[data-theme=light] input::placeholder{color:#737373}
+[data-theme=light] .tag,[data-theme=light] .count-pill,[data-theme=light] .ready-chip,[data-theme=light] .code-button,[data-theme=light] .notice,[data-theme=light] .icon-button{border-radius:18px}
+[data-theme=light] .sidebar{background:#fafafa}
+[data-theme=light] .player-card,[data-theme=light] .room-list-item{background:#fafafa;border-color:#e5e5e5;border-radius:18px}
+[data-theme=light] .player-card.turn{background:#f5f5f5;border-color:#737373;box-shadow:none}
+/* Verde mantém o significado de acerto pedido nas regras do jogo. */
+[data-theme=light] .player-card.guessed{background:#f0fdf4;border-color:#bbf7d0}
+[data-theme=light] .avatar,[data-theme=light] .avatar.a1,[data-theme=light] .avatar.a2,[data-theme=light] .avatar.a3{background:#e5e5e5;color:#171717;border-radius:18px}
+[data-theme=light] .identity.hidden{color:#737373}
+[data-theme=light] .call-strip,[data-theme=light] .lobby-message{background:#fafafa;border-color:#e5e5e5;border-radius:18px}
+[data-theme=light] .turn-banner .tag{color:#171717;border-color:#e5e5e5}
+[data-theme=light] .button.success{background:#f0fdf4;color:#15803d;border-color:#bbf7d0}
+[data-theme=light] .ready-chip.done{background:#f5f5f5;color:#171717;border-color:#e5e5e5}
+[data-theme=light] .dialog::backdrop{background:#0a0a0a40;backdrop-filter:blur(8px)}
+[data-theme=light] .dialog{box-shadow:0 12px 40px #00000014}
+[data-theme=light] .little-tag,[data-theme=light] footer{color:#737373}
+[data-theme=light] #toast{background:#171717;color:#fafafa;border-radius:18px;box-shadow:0 4px 12px #00000014}
+[data-theme=light] .connection{color:#e7000b;border-color:#e5e5e5;background:#fff;border-radius:18px}
+[data-theme=light] .kick-button:hover{background:#f5f5f5;color:#e7000b}
+[data-theme=light] button:focus-visible,[data-theme=light] a:focus-visible{outline:2px solid #737373;outline-offset:3px}
+@media(max-width:600px){.header-right{gap:8px}#nick-label{display:none}.theme-switch{gap:2px;padding:3px}.theme-switch button{padding:8px 10px;min-height:38px}.brand{gap:8px}[data-theme=light] .intro h1{font-size:48px}.site-header{padding-left:16px;padding-right:16px}}
+
+/* A mesma linguagem monocromática nos dois modos. */
+:root[data-theme=dark]{--bg:#0a0a0a;--surface:#171717;--raised:#262626;--line:#303030;--text:#fafafa;--muted:#a3a3a3;--lime:#fafafa;--ink:#0a0a0a;--green:#fafafa;--red:#e7000b;font-feature-settings:"ss01" on,"cv11" on}
+[data-theme=dark] body{background:#0a0a0a;background-image:none}
+[data-theme=dark] h1{font-size:48px;font-weight:600;letter-spacing:-.05em;line-height:1.1}
+[data-theme=dark] h2,[data-theme=dark] h3{font-weight:600;letter-spacing:-.025em}
+[data-theme=dark] .eyebrow,[data-theme=dark] .card-step{letter-spacing:.05em}
+[data-theme=dark] .action-card.featured{transform:none;background:var(--surface);border-color:var(--line);color:var(--text)}
+[data-theme=dark] .action-card.featured p{color:var(--muted)}
+[data-theme=dark] .brand-mark,[data-theme=dark] .big-symbol{background:#fafafa;color:#0a0a0a;transform:none;border-radius:18px}
+[data-theme=dark] .button{border-radius:18px;font-size:14px;font-weight:500}
+[data-theme=dark] .button.dark,[data-theme=dark] .button.primary{background:#fafafa;color:#0a0a0a}
+[data-theme=dark] .button.dark:hover,[data-theme=dark] .button.primary:hover{background:#e5e5e5}
+[data-theme=dark] .button.secondary{background:#262626;border-color:transparent;color:#fafafa}
+[data-theme=dark] .button.secondary:hover{background:#303030}
+[data-theme=dark] input{background:#262626;border-color:transparent;color:#fafafa;border-radius:18px}
+[data-theme=dark] input:focus{border-color:#737373}
+[data-theme=dark] input::placeholder{color:#a3a3a3}
+[data-theme=dark] .action-card,[data-theme=dark] .main-panel,[data-theme=dark] .sidebar,[data-theme=dark] .dialog{border-radius:24px}
+[data-theme=dark] .player-card,[data-theme=dark] .room-list-item,[data-theme=dark] .call-strip,[data-theme=dark] .lobby-message{background:#171717;border-color:#303030;border-radius:18px}
+[data-theme=dark] .player-card.turn{background:#262626;border-color:#a3a3a3;box-shadow:none}
+[data-theme=dark] .avatar,[data-theme=dark] .avatar.a1,[data-theme=dark] .avatar.a2,[data-theme=dark] .avatar.a3{background:#303030;color:#fafafa;border-radius:18px}
+[data-theme=dark] .tag,[data-theme=dark] .count-pill,[data-theme=dark] .ready-chip,[data-theme=dark] .code-button,[data-theme=dark] .notice,[data-theme=dark] .icon-button{border-radius:18px}
+[data-theme=dark] .turn-banner .tag{border-color:#737373;color:#fafafa}
+[data-theme=dark] .ready-chip.done{background:#262626;border-color:#303030;color:#fafafa}
+[data-theme=dark] .button.danger{background:#171717;border-color:#303030;color:#e7000b}
+[data-theme=dark] .little-tag,[data-theme=dark] footer{color:#a3a3a3}
+[data-theme=dark] #toast{background:#fafafa;color:#0a0a0a;box-shadow:0 4px 12px #0003}
+[data-theme=dark] .step.active .step-number{background:#fafafa;color:#0a0a0a}
+[data-theme=dark] .connection{color:#e7000b;border-color:#303030}
+[data-theme=dark] .dialog::backdrop{background:#0008}
+[data-theme] .player-card.guessed,[data-theme] .button.success{background:var(--raised);border-color:var(--line);color:var(--text)}
+[data-theme] .guessed .card-status{color:var(--text)}
+.avatar{position:relative;overflow:hidden}.avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit}
+.profile-button{padding:0;border:1px solid var(--line);background:var(--raised);color:var(--text);width:38px;height:38px;flex-shrink:0;border-radius:18px;overflow:hidden}
+.profile-button .avatar{width:100%;height:100%;border-radius:inherit}
+.profile-preview{display:flex;justify-content:center;margin:24px 0}.profile-preview .avatar{width:112px;height:112px;font-size:32px;border-radius:24px}
+.profile-form input[type=file]{padding:12px;font-size:14px}.profile-form .button-row{margin-top:24px}
+@media(max-width:600px){[data-theme=dark] .intro h1{font-size:48px}.header-right{gap:6px}.profile-button{width:32px;height:32px}.theme-switch button{padding:8px}.brand{font-size:14px}.brand-mark{width:28px;height:28px}}

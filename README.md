@@ -62,3 +62,6 @@ O servidor local abre em `http://localhost:3000`. A prévia local usa a função
 - `vercel.json`: publicação automática ao importar o repositório.
 
 Para migrar o jogo para outro projeto, instale o SQL e a função nesse projeto e atualize a URL/chave pública em `api/game.js` e a URL de prévia em `app.js`. Nunca use uma chave service-role no navegador.
+
+### Aparência e perfil
+Botões Light e Dark seguem a interface monocromática e salvam a preferência neste navegador. Clique no avatar ao lado do nick para escolher, remover e salvar uma foto. Fotos são recortadas ao centro e comprimidas para JPEG de 96×96; ficam neste navegador e são compartilhadas com os participantes da sala.

@@ -8,12 +8,24 @@ const storage = {
   get(key) { try { return localStorage.getItem(`qes:${key}`); } catch { return null; } },
   set(key, value) { try { value == null ? localStorage.removeItem(`qes:${key}`) : localStorage.setItem(`qes:${key}`, value); } catch { /* A sessão continua, mesmo sem armazenamento. */ } },
 };
+function applyTheme(theme) {
+  const selected = theme === 'dark' ? 'dark' : 'light';
+  document.documentElement.dataset.theme = selected;
+  storage.set('theme', selected);
+  document.querySelectorAll('[data-theme-choice]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.themeChoice === selected)));
+  document.querySelector('meta[name="theme-color"]').content = selected === 'light' ? '#f5f5f5' : '#0a0a0a';
+}
+document.querySelectorAll('[data-theme-choice]').forEach(button => button.addEventListener('click', () => applyTheme(button.dataset.themeChoice)));
+applyTheme(document.documentElement.dataset.theme || 'light');
 let token = storage.get('token');
 if (!/^[0-9a-f]{64}$/.test(token || '')) {
   token = [...crypto.getRandomValues(new Uint8Array(32))].map(n => n.toString(16).padStart(2,'0')).join('');
   storage.set('token', token);
 }
 let nick = storage.get('nick') || '';
+let profilePhoto = storage.get('avatar') || '';
+let pendingPhoto = '';
+let photoLoading = false;
 let room = null;
 let busy = false;
 let polling = false;
@@ -62,7 +74,7 @@ async function api(action, extra = {}) {
   const response = await fetch(apiUrl, {
     method: 'POST',
     headers: { 'Content-Type':'application/json' },
-    body: JSON.stringify({ action, token, code: room?.code || '', version: room?.version, round: room?.round, ...extra }),
+    body: JSON.stringify({ action, token, code: room?.code || '', version: room?.version, round: room?.round, ...(['create','join'].includes(action) ? { avatar: profilePhoto } : {}), ...extra }),
     signal: AbortSignal.timeout(18000),
   });
   let data;
@@ -136,7 +148,7 @@ $('#accept-confirm').onclick = () => resolveConfirmation(true);
 $('#confirm-dialog').addEventListener('cancel', event => { event.preventDefault(); resolveConfirmation(false); });
 
 function avatar(player, index = 0, extra = '') {
-  return `<span class="avatar a${index % 4} ${extra}" aria-hidden="true">${escape([...player.nick].slice(0,2).join('').toLocaleUpperCase('pt-BR'))}</span>`;
+  return `<span class="avatar a${index % 4} ${extra}" aria-hidden="true">${escape([...player.nick].slice(0,2).join('').toLocaleUpperCase('pt-BR'))}${player.avatar ? `<img src="${escape(player.avatar)}" alt="">` : ''}</span>`;
 }
 
 function home() {
@@ -257,7 +269,7 @@ function bind() {
       if (!await confirmAction('Expulsar jogador?', `${player?.nick} terá que deixar esta sala.`, 'Expulsar')) return;
     }
     if (action === 'leave' && !await confirmAction('Sair da sala?', 'Você pode voltar pela lista de salas. Se uma rodada estiver em andamento, aguarde ela terminar para entrar novamente.', 'Sair')) return;
-    if (action === 'guessed' && !await confirmAction('Você acertou?', 'Confirme seu palpite com a galera na call antes de marcar o acerto. Você ficará verde e sairá dos turnos.', 'Sim, acertei!')) return;
+    if (action === 'guessed' && !await confirmAction('Você acertou?', 'Confirme seu palpite com a galera na call antes de marcar o acerto. Seu acerto será marcado e você sairá dos turnos.', 'Sim, acertei!')) return;
     if (action === 'giveup' && !await confirmAction('Desistir desta rodada?', 'Você poderá acompanhar seus amigos e voltará a jogar na próxima rodada.', 'Desistir')) return;
     await act(action, action === 'create' ? { nick } : action === 'join' ? { code: button.dataset.code, nick } : action === 'kick' ? { target: button.dataset.target } : {});
     if (!room) refreshRooms();
@@ -293,6 +305,7 @@ $('#nick-form').onsubmit = async event => {
   if ([...name].length < 2) { toast('Seu nick precisa ter pelo menos 2 letras.'); return; }
   nick = name; storage.set('nick', nick); admitted = true;
   $('#nick-label').textContent = nick;
+  refreshProfile();
   $('#nick-dialog').close();
   const code = storage.get('room');
   if (/^[A-F0-9]{6}$/.test(code || '')) {
@@ -305,8 +318,54 @@ $('#nick-form').onsubmit = async event => {
 };
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { poll(); refreshRooms(); } });
 window.addEventListener('online', poll);
+window.addEventListener('storage', event => { if (event.key === 'qes:theme') applyTheme(event.newValue); });
 setInterval(() => { if (!busy) poll(); }, 1800);
 setInterval(tick, 1000);
 setInterval(refreshRooms, 5000);
 render();
 $('#nick-dialog').showModal();
+
+function refreshProfile() {
+  $('#profile-button').innerHTML = avatar({ nick: nick || 'EU', avatar: profilePhoto });
+  $('#profile-preview').innerHTML = avatar({ nick: nick || 'EU', avatar: pendingPhoto });
+}
+$('#profile-button').onclick = () => {
+  pendingPhoto = profilePhoto;
+  $('#profile-file').value = '';
+  $('#profile-message').textContent = 'JPG, PNG ou WebP · até 8 MB.';
+  refreshProfile();
+  $('#profile-dialog').showModal();
+};
+$('#close-profile').onclick = () => $('#profile-dialog').close();
+$('#remove-profile').onclick = () => { pendingPhoto = ''; $('#profile-file').value = ''; refreshProfile(); };
+$('#profile-file').onchange = async event => {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 8 * 1024 * 1024) { toast('Escolha JPG, PNG ou WebP de até 8 MB.'); return; }
+  photoLoading = true;
+  $('#save-profile').disabled = true;
+  const url = URL.createObjectURL(file);
+  try {
+    const image = new Image(); image.src = url; await image.decode();
+    const canvas = document.createElement('canvas'); canvas.width = canvas.height = 96;
+    const side = Math.min(image.naturalWidth, image.naturalHeight);
+    canvas.getContext('2d').drawImage(image, (image.naturalWidth-side)/2, (image.naturalHeight-side)/2, side, side, 0, 0, 96, 96);
+    pendingPhoto = canvas.toDataURL('image/jpeg', .72);
+    if (pendingPhoto.length > 18000) throw new Error('Não foi possível reduzir a foto. Escolha outra imagem.');
+    refreshProfile(); $('#profile-message').textContent = 'Foto pronta. Clique em Salvar foto.';
+  } catch (error) { pendingPhoto = profilePhoto; refreshProfile(); toast(error.message || 'Não foi possível abrir a imagem.'); }
+  finally { URL.revokeObjectURL(url); photoLoading = false; $('#save-profile').disabled = false; }
+};
+$('#profile-form').onsubmit = async event => {
+  event.preventDefault();
+  if (photoLoading || busy) return;
+  const selectedPhoto = pendingPhoto;
+  setBusy(true); $('#save-profile').disabled = true;
+  try {
+    if (room) update(await api('profile', { avatar: selectedPhoto }));
+    profilePhoto = selectedPhoto; storage.set('avatar', profilePhoto); refreshProfile();
+    $('#profile-dialog').close(); toast('Foto de perfil salva.');
+  } catch (error) { toast(error.message); }
+  finally { setBusy(false); $('#save-profile').disabled = false; }
+};
+refreshProfile();
