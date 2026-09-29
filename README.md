@@ -1,6 +1,6 @@
 # Quem eu sou?
 
-Jogo multiplayer em português, para celular e PC. De 2 a 12 amigos entram por código e usam uma call externa para conversar.
+Jogo multiplayer em português, para celular e PC. De 2 a 12 amigos entram pela lista de salas ativas e usam uma call externa para conversar.
 
 ## Publicar no Vercel
 
@@ -14,7 +14,7 @@ Jogo multiplayer em português, para celular e PC. De 2 a 12 amigos entram por c
 ## Como jogar
 
 - O formulário de nick abre no início e não fecha até ser preenchido.
-- Crie uma sala, copie o código de 6 caracteres ou entre com um código recebido.
+- Crie uma sala ou escolha uma na lista de salas ativas e toque em Entrar. A lista se atualiza a cada 5 segundos. Salas em rodada ou lotadas aparecem com entrada indisponível.
 - O anfitrião pode expulsar jogadores. A sala aceita até 12 pessoas.
 - Ao começar, o servidor sorteia um ciclo: cada jogador escolhe a identidade de outro e ninguém recebe a si mesmo. Funciona com 2, 3 e mais pessoas.
 - Todos enviam um nome secreto. O jogo começa automaticamente quando as identidades estiverem prontas.

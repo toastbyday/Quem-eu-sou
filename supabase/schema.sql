@@ -56,15 +56,31 @@ declare
   rate game_private.requests%rowtype;
 begin
   if token_hash is null or token_hash !~ '^[0-9a-f]{64}$' then raise exception 'Sessão inválida.'; end if;
-  if action not in ('create','join','state','start','assign','ready','guessed','giveup','kick','leave') or action is null then raise exception 'Ação inválida.'; end if;
+  if action not in ('create','join','state','list','start','assign','ready','guessed','giveup','kick','leave') or action is null then raise exception 'Ação inválida.'; end if;
   insert into game_private.requests(token_hash) values(qes_game.token_hash) on conflict do nothing;
   select * into rate from game_private.requests r where r.token_hash = qes_game.token_hash for update;
-  if action = 'state' then
+  if action in ('state','list') then
     if rate.last_read > now() - interval '700 milliseconds' then raise exception 'Espere um instante.'; end if;
     update game_private.requests r set last_read = now() where r.token_hash = qes_game.token_hash;
   else
     if rate.last_write > now() - interval '350 milliseconds' then raise exception 'Espere um instante.'; end if;
     update game_private.requests r set last_write = now() where r.token_hash = qes_game.token_hash;
+  end if;
+  if action = 'list' then
+    return jsonb_build_object('rooms', coalesce((
+      select jsonb_agg(summary order by touched_at desc) from (
+        select r.touched_at, jsonb_build_object(
+          'code', r.code,
+          'host', coalesce((select x->>'nick' from jsonb_array_elements(r.state->'players') x where x->>'id' = r.state->>'host'), 'Amigos'),
+          'players', jsonb_array_length(r.state->'players'),
+          'phase', r.state->>'phase'
+        ) as summary
+        from game_private.rooms r
+        where r.touched_at > now() - interval '90 seconds'
+          and exists(select 1 from jsonb_array_elements(r.state->'players') x where (x->>'seen')::timestamptz > now() - interval '25 seconds')
+          and not (r.state->'banned' ? token_hash)
+      ) active
+    ), '[]'::jsonb));
   end if;
   if action = 'create' then
     if rate.day = current_date and rate.created_rooms >= 20 then raise exception 'Limite diário de salas atingido.'; end if;

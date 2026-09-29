@@ -23,6 +23,33 @@ let toastTimer;
 let lastHash = '';
 let confirmResolve;
 let lastAutoAttempt = 0;
+let activeRooms = [];
+let roomsLoaded = false;
+let roomsError = '';
+let listing = false;
+
+function roomList() {
+  if (roomsError) return `<div class="rooms-message">${escape(roomsError)}</div>`;
+  if (!roomsLoaded) return '<div class="rooms-message">Buscando salas ativas…</div>';
+  if (!activeRooms.length) return '<div class="rooms-message">Nenhuma sala ativa agora. Crie uma e chame a galera!</div>';
+  return activeRooms.map(r => {
+    const inRound = ['choosing','playing'].includes(r.phase);
+    const blocked = inRound || r.players >= 12;
+    const status = inRound ? 'Rodada em andamento' : r.players >= 12 ? 'Sala lotada' : 'Disponível para entrar';
+    return `<article class="room-list-item"><div><strong>Sala de ${escape(r.host)}</strong><span>${r.players}/12 jogadores · ${escape(r.code)}</span><small>${status}</small></div><button class="button ${blocked ? 'secondary' : 'primary'}" data-action="join" data-code="${escape(r.code)}" data-disabled="${blocked}" ${blocked ? 'disabled' : ''}>Entrar</button></article>`;
+  }).join('');
+}
+
+async function refreshRooms() {
+  if (!admitted || room || listing || busy || document.hidden) return;
+  listing = true;
+  try { const data = await api('list'); activeRooms = data.rooms; roomsLoaded = true; roomsError = ''; }
+  catch { roomsError = 'Não foi possível buscar as salas. Tentaremos novamente em instantes.'; }
+  finally {
+    listing = false;
+    if (!room && $('#active-rooms')) { $('#active-rooms').innerHTML = roomList(); bind(); setBusy(busy); }
+  }
+}
 
 function toast(message) {
   $('#toast').textContent = message;
@@ -124,9 +151,9 @@ function home() {
         <h3>Crie sua sala</h3><p>Seu grupo, suas identidades. Compartilhe o código e comece a brincadeira.</p>
         <button class="button dark" data-action="create">Criar sala</button>
       </article>
-      <article class="action-card"><div class="card-top"><span class="card-icon" aria-hidden="true">#</span><span class="card-step">JÁ RECEBEU UM CONVITE?</span></div>
-        <h3>Entre na sala</h3><p>Digite o código que seu amigo compartilhou.</p>
-        <form id="join-form" class="join-form"><label class="sr-only" for="code-input">Código da sala</label><input id="code-input" name="code" maxlength="6" minlength="6" pattern="[A-Fa-f0-9]{6}" placeholder="CÓDIGO" autocomplete="off" autocapitalize="characters" spellcheck="false" required><button class="button secondary" type="submit">Entrar</button></form>
+      <article class="action-card"><div class="card-top"><span class="card-icon" aria-hidden="true">#</span><span class="card-step">ENCONTRE A GALERA</span></div>
+        <h3>Salas ativas</h3><p>Escolha uma sala e entre para jogar. A lista se atualiza automaticamente.</p>
+        <div id="active-rooms" class="active-rooms" aria-label="Salas ativas">${roomList()}</div>
       </article>
     </section>
   </div>`;
@@ -229,19 +256,12 @@ function bind() {
       const player = room.players.find(p => p.id === button.dataset.target);
       if (!await confirmAction('Expulsar jogador?', `${player?.nick} terá que deixar esta sala.`, 'Expulsar')) return;
     }
-    if (action === 'leave' && !await confirmAction('Sair da sala?', 'Você pode voltar com o código. Se uma rodada estiver em andamento, aguarde ela terminar para entrar novamente.', 'Sair')) return;
+    if (action === 'leave' && !await confirmAction('Sair da sala?', 'Você pode voltar pela lista de salas. Se uma rodada estiver em andamento, aguarde ela terminar para entrar novamente.', 'Sair')) return;
     if (action === 'guessed' && !await confirmAction('Você acertou?', 'Confirme seu palpite com a galera na call antes de marcar o acerto. Você ficará verde e sairá dos turnos.', 'Sim, acertei!')) return;
     if (action === 'giveup' && !await confirmAction('Desistir desta rodada?', 'Você poderá acompanhar seus amigos e voltará a jogar na próxima rodada.', 'Desistir')) return;
-    await act(action, action === 'create' ? { nick } : action === 'kick' ? { target: button.dataset.target } : {});
+    await act(action, action === 'create' ? { nick } : action === 'join' ? { code: button.dataset.code, nick } : action === 'kick' ? { target: button.dataset.target } : {});
+    if (!room) refreshRooms();
   });
-  const joinForm = $('#join-form');
-  if (joinForm) {
-    $('#code-input').oninput = event => { event.target.value = event.target.value.toUpperCase().replace(/[^A-F0-9]/g,''); };
-    joinForm.onsubmit = async event => {
-      event.preventDefault();
-      if (admitted && !busy) await act('join', { code: $('#code-input').value.trim().toUpperCase(), nick });
-    };
-  }
   if ($('#assign-form')) $('#assign-form').onsubmit = async event => {
     event.preventDefault();
     await act('assign', { identity: $('#identity-input').value.trim() });
@@ -281,10 +301,12 @@ $('#nick-form').onsubmit = async event => {
     catch { storage.set('room', null); toast('Sua sala anterior foi encerrada. Crie ou entre em outra.'); }
     finally { setBusy(false); }
   }
+  refreshRooms();
 };
-document.addEventListener('visibilitychange', () => { if (!document.hidden) poll(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { poll(); refreshRooms(); } });
 window.addEventListener('online', poll);
 setInterval(() => { if (!busy) poll(); }, 1800);
 setInterval(tick, 1000);
+setInterval(refreshRooms, 5000);
 render();
 $('#nick-dialog').showModal();

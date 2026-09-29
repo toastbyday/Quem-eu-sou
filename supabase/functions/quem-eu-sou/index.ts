@@ -17,8 +17,8 @@ Deno.serve(async (request: Request) => {
     let body;
     try { body = JSON.parse(raw); } catch { return reply({ error: 'Pedido inválido.' }, 400); }
     if (!body || typeof body !== 'object' || !/^[0-9a-f]{64}$/.test(body.token || '')) return reply({ error: 'Sessão inválida.' }, 401);
-    if (!['create','join','state','start','assign','ready','guessed','giveup','kick','leave'].includes(body.action)) return reply({ error: 'Ação inválida.' }, 400);
-    if (body.action !== 'create' && !/^[0-9A-F]{6}$/.test(body.code || '')) return reply({ error: 'O código precisa ter 6 caracteres.' }, 400);
+    if (!['create','join','state','list','start','assign','ready','guessed','giveup','kick','leave'].includes(body.action)) return reply({ error: 'Ação inválida.' }, 400);
+    if (!['create','list'].includes(body.action) && !/^[0-9A-F]{6}$/.test(body.code || '')) return reply({ error: 'O código precisa ter 6 caracteres.' }, 400);
     const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(body.token));
     const hash = [...new Uint8Array(digest)].map(n => n.toString(16).padStart(2,'0')).join('');
     const payload: Record<string, unknown> = {};
