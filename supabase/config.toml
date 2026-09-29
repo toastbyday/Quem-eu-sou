@@ -1,0 +1,6 @@
+project_id = "fezriztbwnxcvkwrbybc"
+
+[functions.quem-eu-sou]
+# O jogo usa autenticação própria de convidado por token de 256 bits.
+verify_jwt = false
+entrypoint = "./functions/quem-eu-sou/index.ts"

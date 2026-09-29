@@ -1,0 +1,290 @@
+const $ = selector => document.querySelector(selector);
+const app = $('#app');
+// A prévia local chama a função pública diretamente; no Vercel usa a API da mesma origem.
+const localPreview = ['localhost','127.0.0.1','terminal.local'].includes(location.hostname);
+const apiUrl = localPreview ? 'https://fezriztbwnxcvkwrbybc.supabase.co/functions/v1/quem-eu-sou' : '/api/game';
+const escape = value => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
+const storage = {
+  get(key) { try { return localStorage.getItem(`qes:${key}`); } catch { return null; } },
+  set(key, value) { try { value == null ? localStorage.removeItem(`qes:${key}`) : localStorage.setItem(`qes:${key}`, value); } catch { /* A sessão continua, mesmo sem armazenamento. */ } },
+};
+let token = storage.get('token');
+if (!/^[0-9a-f]{64}$/.test(token || '')) {
+  token = [...crypto.getRandomValues(new Uint8Array(32))].map(n => n.toString(16).padStart(2,'0')).join('');
+  storage.set('token', token);
+}
+let nick = storage.get('nick') || '';
+let room = null;
+let busy = false;
+let polling = false;
+let admitted = false;
+let lostConnection = false;
+let toastTimer;
+let lastHash = '';
+let confirmResolve;
+let lastAutoAttempt = 0;
+
+function toast(message) {
+  $('#toast').textContent = message;
+  $('#toast').classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $('#toast').classList.remove('show'), 4200);
+}
+
+async function api(action, extra = {}) {
+  const response = await fetch(apiUrl, {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify({ action, token, code: room?.code || '', version: room?.version, round: room?.round, ...extra }),
+    signal: AbortSignal.timeout(18000),
+  });
+  let data;
+  try { data = await response.json(); } catch { throw new Error('Não foi possível conectar ao jogo.'); }
+  if (!response.ok || data.error) throw new Error(data.error || 'Não foi possível atualizar a sala.');
+  return data;
+}
+
+function update(data) {
+  if (data.left) { room = null; storage.set('room', null); lastHash = ''; render(); return; }
+  if (room && room.code === data.code && data.version < room.version) return;
+  room = data;
+  storage.set('room', room.code);
+  const hash = JSON.stringify(data);
+  if (hash !== lastHash || lostConnection) { lostConnection = false; lastHash = hash; render(); }
+}
+
+function setBusy(value) {
+  busy = value;
+  app.querySelectorAll('button[data-action],form button').forEach(button => {
+    button.disabled = value || button.dataset.disabled === 'true';
+  });
+}
+
+async function act(action, extra = {}) {
+  if (busy) return;
+  setBusy(true);
+  try { update(await api(action, extra)); }
+  catch (error) {
+    toast(error.message);
+    if (room) await poll();
+  } finally { setBusy(false); }
+}
+
+async function poll() {
+  if (!room || polling || !admitted || document.hidden) return;
+  polling = true;
+  const requestedCode = room.code;
+  try {
+    const result = await api('state');
+    if (room?.code === requestedCode) update(result);
+  } catch (error) {
+    if (room?.code !== requestedCode) return;
+    if (/expulso|não faz parte|não encontrada|encerrada/.test(error.message)) {
+      room = null; storage.set('room', null); lastHash = ''; render(); toast(error.message);
+    } else if (!/instante/.test(error.message)) {
+      lostConnection = true;
+      if (!$('#connection-warning')) {
+        const warning = document.createElement('div');
+        warning.id = 'connection-warning'; warning.className = 'connection';
+        warning.textContent = 'Tentando reconectar… Sua partida fica salva. Aguarde antes de jogar sua vez.';
+        app.prepend(warning);
+      }
+    }
+  } finally { polling = false; }
+}
+
+function confirmAction(title, copy, label = 'Confirmar') {
+  $('#confirm-title').textContent = title;
+  $('#confirm-copy').textContent = copy;
+  $('#accept-confirm').textContent = label;
+  $('#confirm-dialog').showModal();
+  return new Promise(resolve => { confirmResolve = resolve; });
+}
+function resolveConfirmation(value) {
+  $('#confirm-dialog').close();
+  confirmResolve?.(value); confirmResolve = null;
+}
+$('#cancel-confirm').onclick = () => resolveConfirmation(false);
+$('#accept-confirm').onclick = () => resolveConfirmation(true);
+$('#confirm-dialog').addEventListener('cancel', event => { event.preventDefault(); resolveConfirmation(false); });
+
+function avatar(player, index = 0, extra = '') {
+  return `<span class="avatar a${index % 4} ${extra}" aria-hidden="true">${escape([...player.nick].slice(0,2).join('').toLocaleUpperCase('pt-BR'))}</span>`;
+}
+
+function home() {
+  return `<div class="start-layout">
+    <section class="intro"><span class="eyebrow">A GALERA SABE. VOCÊ NÃO.</span>
+      <h1><span>Quem</span> <span>eu sou<span class="lime">?</span></span></h1>
+      <p>Uma identidade secreta para cada amigo. Entre na call, faça suas perguntas e descubra a sua.</p>
+      <div class="meta-tags"><span class="tag">2–12 jogadores</span><span class="tag">Online com amigos</span><span class="tag">No celular ou PC</span></div>
+    </section>
+    <section class="start-actions" aria-label="Escolha como jogar">
+      <article class="action-card featured"><div class="card-top"><span class="card-icon" aria-hidden="true">+</span><span class="card-step">VOCÊ CHAMA A GALERA</span></div>
+        <h3>Crie sua sala</h3><p>Seu grupo, suas identidades. Compartilhe o código e comece a brincadeira.</p>
+        <button class="button dark" data-action="create">Criar sala</button>
+      </article>
+      <article class="action-card"><div class="card-top"><span class="card-icon" aria-hidden="true">#</span><span class="card-step">JÁ RECEBEU UM CONVITE?</span></div>
+        <h3>Entre na sala</h3><p>Digite o código que seu amigo compartilhou.</p>
+        <form id="join-form" class="join-form"><label class="sr-only" for="code-input">Código da sala</label><input id="code-input" name="code" maxlength="6" minlength="6" pattern="[A-Fa-f0-9]{6}" placeholder="CÓDIGO" autocomplete="off" autocapitalize="characters" spellcheck="false" required><button class="button secondary" type="submit">Entrar</button></form>
+      </article>
+    </section>
+  </div>`;
+}
+
+function sidebar() {
+  const phase = room.phase;
+  const current = phase === 'lobby' ? 0 : phase === 'choosing' ? 1 : 2;
+  const steps = [['Junte seus amigos','Compartilhe o código da sala.'],['Escolha um nome','Seu sorteio é secreto. Capriche na ideia.'],['Descubra quem é','Pergunte na call, uma vez por turno.']];
+  return `<aside class="sidebar"><h3>O roteiro da brincadeira</h3><div class="steps">${steps.map(([title,copy],i) => `<div class="step ${i === current ? 'active' : ''}"><span class="step-number">0${i+1}</span><div><strong>${title}</strong><p>${copy}</p></div></div>`).join('')}</div><div class="sidebar-bottom"><strong>Todo mundo sabe, menos você.</strong><br>Seu nome secreto nunca aparece na sua tela. Pergunte até descobrir.</div></aside>`;
+}
+
+function playerCard(player, index, reveal = false) {
+  const self = player.id === room.me;
+  const host = room.host === room.me;
+  const status = player.status;
+  let label = !player.online ? 'Reconectando…' : 'Na sala';
+  if (reveal) label = status === 'guessed' ? '✓ Acertou!' : status === 'gaveup' ? 'Desistiu' : status === 'waiting' ? 'Joga na próxima rodada' : room.turn === player.id ? 'É a vez de perguntar' : 'Aguardando a vez';
+  return `<article class="player-card ${reveal && room.turn === player.id ? 'turn' : ''} ${reveal ? escape(status) : ''}">
+    <div class="player-header">${avatar(player,index)}<div><div class="player-nick">${escape(player.nick)}${self ? ' <span class="lime">(você)</span>' : ''}</div><div class="player-sub">${player.id === room.host ? 'Anfitrião' : 'Jogador'}${!player.online ? ' · offline' : ''}</div></div>
+      ${host && !self ? `<button class="kick-button" data-action="kick" data-target="${escape(player.id)}" aria-label="Expulsar ${escape(player.nick)}" title="Expulsar jogador">×</button>` : ''}
+    </div>
+    ${reveal ? `<div class="identity ${self ? 'hidden' : ''}">${self ? '? ? ?' : escape(player.identity || 'Próxima rodada')}</div>` : ''}
+    <div class="card-status">${self && reveal && status === 'active' ? `${label} · sua identidade é secreta` : label}</div>
+  </article>`;
+}
+
+function lobby() {
+  const host = room.host === room.me;
+  const canStart = room.players.length >= 2;
+  return `<section class="main-panel"><div class="panel-head"><h3>Sala de espera</h3><span class="count-pill">${room.players.length} / 12 jogadores</span></div>
+    <div class="lobby-message"><span class="eyebrow">TODO MUNDO PRONTO?</span><h3>Uma boa call começa aqui.</h3><p>Copie o código lá em cima e convide seus amigos. ${host ? 'Quando a galera entrar, você começa.' : 'O anfitrião inicia quando a galera chegar.'}</p></div>
+    <div class="player-grid">${room.players.map((p,i) => playerCard(p,i)).join('')}</div>
+    <div class="panel-actions">${host ? `<button class="button primary" data-action="start" data-disabled="${!canStart}" ${!canStart ? 'disabled' : ''}>${canStart ? 'Começar a rodada' : 'Aguardando mais um jogador'}</button>` : '<div class="wait-label">Aguardando o anfitrião começar…</div>'}</div>
+  </section>`;
+}
+
+function choosing() {
+  const assigned = room.players.find(p => p.id === room.assignment);
+  const readyCount = room.players.filter(p => p.ready).length;
+  return `<section class="main-panel"><div class="panel-head"><h3>Hora do segredo</h3><span class="count-pill">${readyCount} / ${room.players.length} escolhas</span></div>
+    <div class="assignment-panel">${avatar(assigned || {nick:'?'},room.players.indexOf(assigned),'assignment-avatar')}
+      <span class="eyebrow">${room.submitted ? 'SEU SEGREDO ESTÁ GUARDADO' : 'VOCÊ ESCOLHE A IDENTIDADE DE'}</span>
+      <h3>${escape(assigned?.nick || 'Seu amigo')}</h3>
+      ${room.submitted ? '<p>Agora é só esperar a galera escolher. A rodada começa assim que todos enviarem.</p><div class="notice">✓ Nome enviado. Não conte para quem você escolheu!</div>' : `<p>Pode ser uma pessoa, personagem, animal ou objeto. Use a criatividade e não conte para ${escape(assigned?.nick)}.</p>
+        <form id="assign-form"><label for="identity-input">Qual será o nome secreto?</label><input id="identity-input" name="identity" minlength="2" maxlength="60" placeholder="Ex.: Bob Esponja" autocomplete="off" required><button class="button primary" type="submit">Guardar o nome</button></form>`}
+    </div><div class="ready-list">${room.players.map(p => {
+      // Pronto significa que o jogador recebeu seu nome. Não revela quem o escolheu.
+      return `<span class="ready-chip ${p.ready ? 'done' : ''}">${p.ready ? '✓' : '…'} ${escape(p.nick)}</span>`;
+    }).join('')}</div>
+    <p class="wait-label">${readyCount} de ${room.players.length} identidades guardadas.</p>
+  </section>`;
+}
+
+function playing() {
+  const current = room.players.find(p => p.id === room.turn);
+  const me = room.players.find(p => p.id === room.me);
+  const myTurn = room.turn === room.me;
+  const active = me?.status === 'active';
+  return `<section class="main-panel"><div class="turn-banner">${avatar(current || { nick:'?' },room.players.indexOf(current))}<div><span class="eyebrow">AGORA É A VEZ DE</span><h3>${myTurn ? 'Você perguntar!' : escape(current?.nick || 'Aguardando')}</h3></div>${myTurn ? '<span class="tag">SUA VEZ</span>' : ''}</div>
+    <div class="call-strip"><span aria-hidden="true">◉</span><span>${myTurn ? '<strong>Faça sua pergunta na call.</strong> Depois das respostas, toque em Pronto.' : `<strong>${escape(current?.nick || 'Seu amigo')} pergunta na call.</strong> Respondam sem entregar o segredo.`}</span></div>
+    <div class="player-grid">${room.players.map((p,i) => playerCard(p,i,true)).join('')}</div>
+    <div class="turn-controls">${active ? (myTurn ? `<button class="button primary" data-action="ready">Pronto · passar a vez</button><div class="button-row"><button class="button success" data-action="guessed">✓ Acertei!</button><button class="button danger" data-action="giveup">Desistir</button></div>` : `<p class="wait-label">Aguarde sua vez. Observe os nomes e ajude a galera.</p><button class="button danger" data-action="giveup">Desistir da rodada</button>`) : `<div class="wait-label">${me?.status === 'guessed' ? '✓ Você acertou! Agora ajude seus amigos na call.' : 'Você saiu dos turnos desta rodada. Continue acompanhando a galera.'}</div>`}</div>
+  </section>`;
+}
+
+function finished() {
+  const count = room.players.filter(p => p.status === 'guessed').length;
+  const host = room.host === room.me;
+  return `<section class="main-panel"><div class="panel-head"><span class="eyebrow">RODADA ${room.round} CONCLUÍDA</span><span class="count-pill">${count} acerto${count !== 1 ? 's' : ''}</span></div>
+    <h3 class="finish-title">Quem será você agora<span class="lime">?</span></h3><p class="finish-copy">${room.players.length >= 2 ? 'Novos nomes, outro sorteio. A próxima rodada começa em <strong id="countdown">10</strong>s.' : 'Convide mais um amigo para começar a próxima rodada.'}</p>
+    <div class="player-grid">${room.players.map((p,i) => playerCard(p,i,true)).join('')}</div>
+    ${host && room.players.length >= 2 ? '<div class="panel-actions"><button class="button primary" data-action="start">Começar a próxima agora</button></div>' : ''}
+  </section>`;
+}
+
+function render() {
+  const focused = document.activeElement;
+  const values = [...app.querySelectorAll('input')].map(input => ({ id: input.id, value: input.value, focus: input === focused, start: input.selectionStart, end: input.selectionEnd }));
+  if (!room) app.innerHTML = home();
+  else {
+    const title = room.phase === 'lobby' ? 'A galera reunida.' : `Rodada ${room.round}<span class="lime">.</span>`;
+    app.innerHTML = `${lostConnection ? '<div class="connection" id="connection-warning">Tentando reconectar… Aguarde antes de jogar sua vez.</div>' : ''}<div class="room-top"><div class="room-title"><span class="eyebrow">${room.phase === 'lobby' ? 'SUA SALA' : 'QUEM EU SOU?'}</span><h2>${title}</h2></div><div class="room-tools"><button class="code-button" id="copy-code" aria-label="Copiar código da sala ${escape(room.code)}"><small>CÓDIGO · COPIAR</small><strong>${escape(room.code)}</strong></button><button class="button secondary" data-action="leave">Sair</button></div></div>
+      <div class="room-layout">${({ lobby, choosing, playing, finished }[room.phase] || lobby)()}${sidebar()}</div>`;
+  }
+  values.forEach(saved => {
+    const input = document.getElementById(saved.id);
+    if (!input) return;
+    input.value = saved.value;
+    if (saved.focus) { input.focus({ preventScroll:true }); try { input.setSelectionRange(saved.start, saved.end); } catch {} }
+  });
+  bind(); setBusy(busy); tick();
+}
+
+function bind() {
+  app.querySelectorAll('[data-action]').forEach(button => button.onclick = async () => {
+    const action = button.dataset.action;
+    if (!admitted || busy) return;
+    if (action === 'kick') {
+      const player = room.players.find(p => p.id === button.dataset.target);
+      if (!await confirmAction('Expulsar jogador?', `${player?.nick} terá que deixar esta sala.`, 'Expulsar')) return;
+    }
+    if (action === 'leave' && !await confirmAction('Sair da sala?', 'Você pode voltar com o código. Se uma rodada estiver em andamento, aguarde ela terminar para entrar novamente.', 'Sair')) return;
+    if (action === 'guessed' && !await confirmAction('Você acertou?', 'Confirme seu palpite com a galera na call antes de marcar o acerto. Você ficará verde e sairá dos turnos.', 'Sim, acertei!')) return;
+    if (action === 'giveup' && !await confirmAction('Desistir desta rodada?', 'Você poderá acompanhar seus amigos e voltará a jogar na próxima rodada.', 'Desistir')) return;
+    await act(action, action === 'create' ? { nick } : action === 'kick' ? { target: button.dataset.target } : {});
+  });
+  const joinForm = $('#join-form');
+  if (joinForm) {
+    $('#code-input').oninput = event => { event.target.value = event.target.value.toUpperCase().replace(/[^A-F0-9]/g,''); };
+    joinForm.onsubmit = async event => {
+      event.preventDefault();
+      if (admitted && !busy) await act('join', { code: $('#code-input').value.trim().toUpperCase(), nick });
+    };
+  }
+  if ($('#assign-form')) $('#assign-form').onsubmit = async event => {
+    event.preventDefault();
+    await act('assign', { identity: $('#identity-input').value.trim() });
+  };
+  if ($('#copy-code')) $('#copy-code').onclick = async () => {
+    try { await navigator.clipboard.writeText(room.code); toast('Código copiado. Mande para a galera!'); }
+    catch { toast(`Código da sala: ${room.code}`); }
+  };
+}
+
+function tick() {
+  if (room?.phase !== 'finished' || !room.finished_at || room.players.length < 2) return;
+  const seconds = Math.max(0, Math.ceil((Date.parse(room.finished_at) + 10000 - Date.now()) / 1000));
+  if ($('#countdown')) $('#countdown').textContent = seconds;
+  if (seconds === 0 && admitted && !busy && !lostConnection && !document.hidden && Date.now() - lastAutoAttempt > 3000) {
+    lastAutoAttempt = Date.now();
+    // Servidor permite iniciar automaticamente após o intervalo, com versão validada.
+    act('start');
+  }
+}
+
+$('#help-button').onclick = () => $('#help-dialog').showModal();
+$('#close-help').onclick = () => $('#help-dialog').close();
+$('#nick-dialog').addEventListener('cancel', event => event.preventDefault());
+$('#nick-input').value = nick;
+$('#nick-form').onsubmit = async event => {
+  event.preventDefault();
+  const name = $('#nick-input').value.trim();
+  if ([...name].length < 2) { toast('Seu nick precisa ter pelo menos 2 letras.'); return; }
+  nick = name; storage.set('nick', nick); admitted = true;
+  $('#nick-label').textContent = nick;
+  $('#nick-dialog').close();
+  const code = storage.get('room');
+  if (/^[A-F0-9]{6}$/.test(code || '')) {
+    setBusy(true);
+    try { update(await api('state', { code })); toast('Você voltou para a sala.'); }
+    catch { storage.set('room', null); toast('Sua sala anterior foi encerrada. Crie ou entre em outra.'); }
+    finally { setBusy(false); }
+  }
+};
+document.addEventListener('visibilitychange', () => { if (!document.hidden) poll(); });
+window.addEventListener('online', poll);
+setInterval(() => { if (!busy) poll(); }, 1800);
+setInterval(tick, 1000);
+render();
+$('#nick-dialog').showModal();

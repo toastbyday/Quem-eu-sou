@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111413">
+  <meta name="description" content="Escolha uma identidade para seus amigos, faça perguntas na call e descubra quem você é. Um jogo online para 2 a 12 pessoas.">
+  <title>Quem eu sou? — Jogue com seus amigos</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Quem eu sou? início"><span class="brand-mark">?</span><span>quem eu sou<span class="lime">?</span></span></a>
+    <div class="header-right"><span id="nick-label"></span><button id="help-button" class="icon-button" aria-label="Como jogar">?</button></div>
+  </header>
+  <main id="app" tabindex="-1"></main>
+  <footer><span>Um nome. Muitas perguntas.</span><span>Feito para jogar junto.</span></footer>
+  <dialog id="nick-dialog" class="dialog nick-dialog" aria-labelledby="nick-title">
+    <div class="dialog-top"><span class="eyebrow">ANTES DE ENTRAR</span><span class="little-tag">01 / 01</span></div>
+    <div class="big-symbol">?</div>
+    <h2 id="nick-title">Como te chamamos<span class="lime">?</span></h2>
+    <p>Escolha o nick que seus amigos vão ver na sala.</p>
+    <form id="nick-form">
+      <label for="nick-input">Seu nick</label>
+      <input id="nick-input" name="nick" minlength="2" maxlength="20" placeholder="Ex.: Toast" autocomplete="nickname" required>
+      <button class="button primary" type="submit">Vamos jogar</button>
+    </form>
+    <p class="fine">Sem conta, sem senha. Só você e seus amigos.</p>
+  </dialog>
+  <dialog id="help-dialog" class="dialog" aria-labelledby="help-title">
+    <div class="dialog-top"><span class="eyebrow">AS REGRAS</span><button class="icon-button" id="close-help" aria-label="Fechar regras">×</button></div>
+    <h2 id="help-title">Quem será você?</h2>
+    <ol class="rules">
+      <li><strong>Junte a galera.</strong> Crie uma sala e compartilhe o código. De 2 a 12 jogadores.</li>
+      <li><strong>Guarde o segredo.</strong> Cada pessoa recebe outro jogador, por sorteio, e escolhe uma identidade para ele.</li>
+      <li><strong>Pergunte na call.</strong> Você vê as identidades de todos, menos a sua. Na sua vez, faça uma pergunta e toque em Pronto.</li>
+      <li><strong>Descubra quem é.</strong> Depois que a galera confirmar seu acerto na call, toque em Acertei. Você fica verde e sai dos turnos. Também pode desistir.</li>
+      <li><strong>Jogue de novo.</strong> Quando todos terminarem, começa uma nova rodada. O anfitrião pode antecipar o início.</li>
+    </ol>
+    <div class="notice">A conversa acontece na call de vocês. Este site organiza a partida; não inclui chamada de voz.</div>
+  </dialog>
+  <dialog id="confirm-dialog" class="dialog small-dialog" aria-labelledby="confirm-title">
+    <h2 id="confirm-title"></h2><p id="confirm-copy"></p>
+    <div class="button-row"><button id="cancel-confirm" class="button secondary">Cancelar</button><button id="accept-confirm" class="button primary">Confirmar</button></div>
+  </dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
