@@ -63,6 +63,7 @@ begin
       s := public.qes_game('giveup',tokens[i],test_code,jsonb_build_object('version',s->'version'));
     end loop;
     assert s->>'phase' = 'finished', 'Não encerrou a rodada';
+    assert not exists(select 1 from jsonb_array_elements(s->'players') p where p->>'identity' is null), 'Fim da rodada não revelou todos os nomes';
     update game_private.rooms set state = jsonb_set(state,'{finished_at}',to_jsonb((now()-interval '11 seconds')::text)) where rooms.code = test_code;
     update game_private.requests set last_write = null where token_hash = tokens[2];
     s := public.qes_game('start',tokens[2],test_code,jsonb_build_object('version',s->'version'));

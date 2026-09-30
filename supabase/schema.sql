@@ -31,7 +31,7 @@ begin
       'id', p->>'id', 'nick', p->>'nick', 'avatar', coalesce(p->>'avatar',''), 'status', p->>'status',
       'online', (p->>'seen')::timestamptz > now() - interval '25 seconds',
       'ready', coalesce(p->>'identity', '') <> '',
-      'identity', case when idx <> actor and s->>'phase' in ('playing','finished') then p->>'identity' else null end
+      'identity', case when s->>'phase' = 'finished' or (idx <> actor and s->>'phase' = 'playing') then p->>'identity' else null end
     ));
     idx := idx + 1;
   end loop;

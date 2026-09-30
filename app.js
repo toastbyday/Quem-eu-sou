@@ -48,7 +48,7 @@ function roomList() {
     const inRound = ['choosing','playing'].includes(r.phase);
     const blocked = inRound || r.players >= 12;
     const status = inRound ? 'Rodada em andamento' : r.players >= 12 ? 'Sala lotada' : 'Disponível para entrar';
-    return `<article class="room-list-item"><div><strong>Sala de ${escape(r.host)}</strong><span>${r.players}/12 jogadores · ${escape(r.code)}</span><small>${status}</small></div><button class="button ${blocked ? 'secondary' : 'primary'}" data-action="join" data-code="${escape(r.code)}" data-disabled="${blocked}" ${blocked ? 'disabled' : ''}>Entrar</button></article>`;
+    return `<article class="room-list-item"><div><strong>Sala de ${escape(r.host)}</strong><span>${r.players}/12 jogadores</span><small>${status}</small></div><button class="button ${blocked ? 'secondary' : 'primary'}" data-action="join" data-code="${escape(r.code)}" data-disabled="${blocked}" ${blocked ? 'disabled' : ''}>Entrar</button></article>`;
   }).join('');
 }
 
@@ -160,7 +160,7 @@ function home() {
     </section>
     <section class="start-actions" aria-label="Escolha como jogar">
       <article class="action-card featured"><div class="card-top"><span class="card-icon" aria-hidden="true">+</span><span class="card-step">VOCÊ CHAMA A GALERA</span></div>
-        <h3>Crie sua sala</h3><p>Seu grupo, suas identidades. Compartilhe o código e comece a brincadeira.</p>
+        <h3>Crie sua sala</h3><p>Seu grupo, suas identidades. Chame seus amigos pela lista de salas e comece a brincadeira.</p>
         <button class="button dark" data-action="create">Criar sala</button>
       </article>
       <article class="action-card"><div class="card-top"><span class="card-icon" aria-hidden="true">#</span><span class="card-step">ENCONTRE A GALERA</span></div>
@@ -174,13 +174,14 @@ function home() {
 function sidebar() {
   const phase = room.phase;
   const current = phase === 'lobby' ? 0 : phase === 'choosing' ? 1 : 2;
-  const steps = [['Junte seus amigos','Compartilhe o código da sala.'],['Escolha um nome','Seu sorteio é secreto. Capriche na ideia.'],['Descubra quem é','Pergunte na call, uma vez por turno.']];
-  return `<aside class="sidebar"><h3>O roteiro da brincadeira</h3><div class="steps">${steps.map(([title,copy],i) => `<div class="step ${i === current ? 'active' : ''}"><span class="step-number">0${i+1}</span><div><strong>${title}</strong><p>${copy}</p></div></div>`).join('')}</div><div class="sidebar-bottom"><strong>Todo mundo sabe, menos você.</strong><br>Seu nome secreto nunca aparece na sua tela. Pergunte até descobrir.</div></aside>`;
+  const steps = [['Junte seus amigos','Encontre a sala na lista de salas ativas.'],['Escolha um nome','Seu sorteio é secreto. Capriche na ideia.'],['Descubra quem é','Pergunte na call, uma vez por turno.']];
+  return `<aside class="sidebar"><h3>O roteiro da brincadeira</h3><div class="steps">${steps.map(([title,copy],i) => `<div class="step ${i === current ? 'active' : ''}"><span class="step-number">0${i+1}</span><div><strong>${title}</strong><p>${copy}</p></div></div>`).join('')}</div><div class="sidebar-bottom"><strong>Todo mundo sabe, menos você.</strong><br>Durante a rodada, sua identidade fica secreta. No final, todos os nomes são revelados.</div></aside>`;
 }
 
 function playerCard(player, index, reveal = false) {
   const self = player.id === room.me;
   const host = room.host === room.me;
+  const hideIdentity = self && room.phase !== 'finished';
   const status = player.status;
   let label = !player.online ? 'Reconectando…' : 'Na sala';
   if (reveal) label = status === 'guessed' ? '✓ Acertou!' : status === 'gaveup' ? 'Desistiu' : status === 'waiting' ? 'Joga na próxima rodada' : room.turn === player.id ? 'É a vez de perguntar' : 'Aguardando a vez';
@@ -188,7 +189,7 @@ function playerCard(player, index, reveal = false) {
     <div class="player-header">${avatar(player,index)}<div><div class="player-nick">${escape(player.nick)}${self ? ' <span class="lime">(você)</span>' : ''}</div><div class="player-sub">${player.id === room.host ? 'Anfitrião' : 'Jogador'}${!player.online ? ' · offline' : ''}</div></div>
       ${host && !self ? `<button class="kick-button" data-action="kick" data-target="${escape(player.id)}" aria-label="Expulsar ${escape(player.nick)}" title="Expulsar jogador">×</button>` : ''}
     </div>
-    ${reveal ? `<div class="identity ${self ? 'hidden' : ''}">${self ? '? ? ?' : escape(player.identity || 'Próxima rodada')}</div>` : ''}
+    ${reveal ? `<div class="identity ${hideIdentity ? 'hidden' : ''}">${hideIdentity ? '? ? ?' : escape(player.identity || 'Próxima rodada')}</div>` : ''}
     <div class="card-status">${self && reveal && status === 'active' ? `${label} · sua identidade é secreta` : label}</div>
   </article>`;
 }
@@ -197,7 +198,7 @@ function lobby() {
   const host = room.host === room.me;
   const canStart = room.players.length >= 2;
   return `<section class="main-panel"><div class="panel-head"><h3>Sala de espera</h3><span class="count-pill">${room.players.length} / 12 jogadores</span></div>
-    <div class="lobby-message"><span class="eyebrow">TODO MUNDO PRONTO?</span><h3>Uma boa call começa aqui.</h3><p>Copie o código lá em cima e convide seus amigos. ${host ? 'Quando a galera entrar, você começa.' : 'O anfitrião inicia quando a galera chegar.'}</p></div>
+    <div class="lobby-message"><span class="eyebrow">TODO MUNDO PRONTO?</span><h3>Uma boa call começa aqui.</h3><p>Convide seus amigos para entrar na sua sala pela lista de salas ativas. ${host ? 'Quando a galera entrar, você começa.' : 'O anfitrião inicia quando a galera chegar.'}</p></div>
     <div class="player-grid">${room.players.map((p,i) => playerCard(p,i)).join('')}</div>
     <div class="panel-actions">${host ? `<button class="button primary" data-action="start" data-disabled="${!canStart}" ${!canStart ? 'disabled' : ''}>${canStart ? 'Começar a rodada' : 'Aguardando mais um jogador'}</button>` : '<div class="wait-label">Aguardando o anfitrião começar…</div>'}</div>
   </section>`;
@@ -236,7 +237,7 @@ function finished() {
   const count = room.players.filter(p => p.status === 'guessed').length;
   const host = room.host === room.me;
   return `<section class="main-panel"><div class="panel-head"><span class="eyebrow">RODADA ${room.round} CONCLUÍDA</span><span class="count-pill">${count} acerto${count !== 1 ? 's' : ''}</span></div>
-    <h3 class="finish-title">Quem será você agora<span class="lime">?</span></h3><p class="finish-copy">${room.players.length >= 2 ? 'Novos nomes, outro sorteio. A próxima rodada começa em <strong id="countdown">10</strong>s.' : 'Convide mais um amigo para começar a próxima rodada.'}</p>
+    <h3 class="finish-title">Os nomes da rodada.</h3><p class="finish-copy">${room.players.length >= 2 ? 'Novos nomes, outro sorteio. A próxima rodada começa em <strong id="countdown">10</strong>s.' : 'Convide mais um amigo para começar a próxima rodada.'}</p>
     <div class="player-grid">${room.players.map((p,i) => playerCard(p,i,true)).join('')}</div>
     ${host && room.players.length >= 2 ? '<div class="panel-actions"><button class="button primary" data-action="start">Começar a próxima agora</button></div>' : ''}
   </section>`;
@@ -248,7 +249,7 @@ function render() {
   if (!room) app.innerHTML = home();
   else {
     const title = room.phase === 'lobby' ? 'A galera reunida.' : `Rodada ${room.round}<span class="lime">.</span>`;
-    app.innerHTML = `${lostConnection ? '<div class="connection" id="connection-warning">Tentando reconectar… Aguarde antes de jogar sua vez.</div>' : ''}<div class="room-top"><div class="room-title"><span class="eyebrow">${room.phase === 'lobby' ? 'SUA SALA' : 'QUEM EU SOU?'}</span><h2>${title}</h2></div><div class="room-tools"><button class="code-button" id="copy-code" aria-label="Copiar código da sala ${escape(room.code)}"><small>CÓDIGO · COPIAR</small><strong>${escape(room.code)}</strong></button><button class="button secondary" data-action="leave">Sair</button></div></div>
+    app.innerHTML = `${lostConnection ? '<div class="connection" id="connection-warning">Tentando reconectar… Aguarde antes de jogar sua vez.</div>' : ''}<div class="room-top"><div class="room-title"><span class="eyebrow">${room.phase === 'lobby' ? 'SUA SALA' : 'QUEM EU SOU?'}</span><h2>${title}</h2></div><div class="room-tools"><button class="button secondary" data-action="leave">Sair</button></div></div>
       <div class="room-layout">${({ lobby, choosing, playing, finished }[room.phase] || lobby)()}${sidebar()}</div>`;
   }
   values.forEach(saved => {
@@ -278,10 +279,7 @@ function bind() {
     event.preventDefault();
     await act('assign', { identity: $('#identity-input').value.trim() });
   };
-  if ($('#copy-code')) $('#copy-code').onclick = async () => {
-    try { await navigator.clipboard.writeText(room.code); toast('Código copiado. Mande para a galera!'); }
-    catch { toast(`Código da sala: ${room.code}`); }
-  };
+
 }
 
 function tick() {
