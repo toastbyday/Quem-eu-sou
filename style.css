@@ -10,84 +10,20 @@
 
 .active-rooms{display:flex;flex-direction:column;gap:10px;max-height:380px;overflow:auto}.room-list-item{display:flex;gap:12px;justify-content:space-between;align-items:center;padding:14px;border:1px solid var(--line);border-radius:14px;background:#111713}.room-list-item>div{min-width:0}.room-list-item strong{display:block;font-size:.95rem;overflow-wrap:anywhere}.room-list-item span,.room-list-item small{display:block;color:var(--muted);font-size:.8rem;margin-top:6px}.room-list-item .button{flex-shrink:0;padding:12px 16px}.rooms-message{padding:22px 14px;border:1px dashed var(--line);border-radius:14px;color:var(--muted);font-size:.9rem;line-height:1.6}
 
-/* Aparência: controles persistentes e tema claro inspirado na referência. */
-.theme-switch{display:flex;gap:4px;padding:4px;background:var(--raised);border:1px solid var(--line);border-radius:18px;flex-shrink:0}
-.theme-switch button{min-height:36px;padding:8px 12px;border:0;border-radius:18px;background:transparent;color:var(--muted);font-size:14px;font-weight:500}
-.theme-switch button[aria-pressed=true]{background:var(--text);color:var(--bg)}
-:root[data-theme=light]{color-scheme:light;--bg:#f5f5f5;--surface:#fff;--raised:#fafafa;--line:#e5e5e5;--text:#0a0a0a;--muted:#737373;--lime:#0a0a0a;--ink:#fafafa;--red:#e7000b;--green:#15803d;font-feature-settings:"ss01" on,"cv11" on}
-[data-theme=light] body{background:#f5f5f5;background-image:none}
-[data-theme=light] h1{font-size:48px;font-weight:600;letter-spacing:-.05em;line-height:1.1}
-[data-theme=light] h2,[data-theme=light] h3{font-weight:600;letter-spacing:-.025em}
-[data-theme=light] .eyebrow,[data-theme=light] .card-step{letter-spacing:.05em;color:var(--muted)}
-[data-theme=light] .action-card,[data-theme=light] .main-panel,[data-theme=light] .sidebar,[data-theme=light] .dialog{border-radius:24px;box-shadow:0 0 0 1px #1717170d,0 1px 3px #0000000d,0 1px 2px -1px #0000000d}
-[data-theme=light] .action-card.featured{transform:none;background:#fff;color:var(--text);border-color:var(--line)}
-[data-theme=light] .action-card.featured p{color:var(--muted)}
-[data-theme=light] .brand-mark,[data-theme=light] .big-symbol{background:#171717;color:#fafafa;transform:none;border-radius:18px}
-[data-theme=light] .button{border-radius:18px;font-weight:500;font-size:14px;box-shadow:none}
-[data-theme=light] .button.dark,[data-theme=light] .button.primary{background:#0a0a0a;color:#fafafa}
-[data-theme=light] .button.dark:hover,[data-theme=light] .button.primary:hover{background:#262626}
-[data-theme=light] .button.secondary{background:#f5f5f5;border-color:transparent;color:#0a0a0a}
-[data-theme=light] .button.secondary:hover{background:#e5e5e5}
-[data-theme=light] .button.danger{background:#fff;color:#e7000b;border-color:#e5e5e5}
-[data-theme=light] input{background:#f5f5f5;color:#0a0a0a;border-color:transparent;border-radius:18px;font-size:16px}
-[data-theme=light] input:focus{background:#fff;border-color:#e5e5e5;outline:1px solid #e5e5e5;outline-offset:0}
-[data-theme=light] input::placeholder{color:#737373}
-[data-theme=light] .tag,[data-theme=light] .count-pill,[data-theme=light] .ready-chip,[data-theme=light] .code-button,[data-theme=light] .notice,[data-theme=light] .icon-button{border-radius:18px}
-[data-theme=light] .sidebar{background:#fafafa}
-[data-theme=light] .player-card,[data-theme=light] .room-list-item{background:#fafafa;border-color:#e5e5e5;border-radius:18px}
-[data-theme=light] .player-card.turn{background:#f5f5f5;border-color:#737373;box-shadow:none}
-/* Verde mantém o significado de acerto pedido nas regras do jogo. */
-[data-theme=light] .player-card.guessed{background:#f0fdf4;border-color:#bbf7d0}
-[data-theme=light] .avatar,[data-theme=light] .avatar.a1,[data-theme=light] .avatar.a2,[data-theme=light] .avatar.a3{background:#e5e5e5;color:#171717;border-radius:18px}
-[data-theme=light] .identity.hidden{color:#737373}
-[data-theme=light] .call-strip,[data-theme=light] .lobby-message{background:#fafafa;border-color:#e5e5e5;border-radius:18px}
-[data-theme=light] .turn-banner .tag{color:#171717;border-color:#e5e5e5}
-[data-theme=light] .button.success{background:#f0fdf4;color:#15803d;border-color:#bbf7d0}
-[data-theme=light] .ready-chip.done{background:#f5f5f5;color:#171717;border-color:#e5e5e5}
-[data-theme=light] .dialog::backdrop{background:#0a0a0a40;backdrop-filter:blur(8px)}
-[data-theme=light] .dialog{box-shadow:0 12px 40px #00000014}
-[data-theme=light] .little-tag,[data-theme=light] footer{color:#737373}
-[data-theme=light] #toast{background:#171717;color:#fafafa;border-radius:18px;box-shadow:0 4px 12px #00000014}
-[data-theme=light] .connection{color:#e7000b;border-color:#e5e5e5;background:#fff;border-radius:18px}
-[data-theme=light] .kick-button:hover{background:#f5f5f5;color:#e7000b}
-[data-theme=light] button:focus-visible,[data-theme=light] a:focus-visible{outline:2px solid #737373;outline-offset:3px}
-@media(max-width:600px){.header-right{gap:8px}#nick-label{display:none}.theme-switch{gap:2px;padding:3px}.theme-switch button{padding:8px 10px;min-height:38px}.brand{gap:8px}[data-theme=light] .intro h1{font-size:48px}.site-header{padding-left:16px;padding-right:16px}}
-
-/* A mesma linguagem monocromática nos dois modos. */
-:root[data-theme=dark]{--bg:#0a0a0a;--surface:#171717;--raised:#262626;--line:#303030;--text:#fafafa;--muted:#a3a3a3;--lime:#fafafa;--ink:#0a0a0a;--green:#fafafa;--red:#e7000b;font-feature-settings:"ss01" on,"cv11" on}
-[data-theme=dark] body{background:#0a0a0a;background-image:none}
-[data-theme=dark] h1{font-size:48px;font-weight:600;letter-spacing:-.05em;line-height:1.1}
-[data-theme=dark] h2,[data-theme=dark] h3{font-weight:600;letter-spacing:-.025em}
-[data-theme=dark] .eyebrow,[data-theme=dark] .card-step{letter-spacing:.05em}
-[data-theme=dark] .action-card.featured{transform:none;background:var(--surface);border-color:var(--line);color:var(--text)}
-[data-theme=dark] .action-card.featured p{color:var(--muted)}
-[data-theme=dark] .brand-mark,[data-theme=dark] .big-symbol{background:#fafafa;color:#0a0a0a;transform:none;border-radius:18px}
-[data-theme=dark] .button{border-radius:18px;font-size:14px;font-weight:500}
-[data-theme=dark] .button.dark,[data-theme=dark] .button.primary{background:#fafafa;color:#0a0a0a}
-[data-theme=dark] .button.dark:hover,[data-theme=dark] .button.primary:hover{background:#e5e5e5}
-[data-theme=dark] .button.secondary{background:#262626;border-color:transparent;color:#fafafa}
-[data-theme=dark] .button.secondary:hover{background:#303030}
-[data-theme=dark] input{background:#262626;border-color:transparent;color:#fafafa;border-radius:18px}
-[data-theme=dark] input:focus{border-color:#737373}
-[data-theme=dark] input::placeholder{color:#a3a3a3}
-[data-theme=dark] .action-card,[data-theme=dark] .main-panel,[data-theme=dark] .sidebar,[data-theme=dark] .dialog{border-radius:24px}
-[data-theme=dark] .player-card,[data-theme=dark] .room-list-item,[data-theme=dark] .call-strip,[data-theme=dark] .lobby-message{background:#171717;border-color:#303030;border-radius:18px}
-[data-theme=dark] .player-card.turn{background:#262626;border-color:#a3a3a3;box-shadow:none}
-[data-theme=dark] .avatar,[data-theme=dark] .avatar.a1,[data-theme=dark] .avatar.a2,[data-theme=dark] .avatar.a3{background:#303030;color:#fafafa;border-radius:18px}
-[data-theme=dark] .tag,[data-theme=dark] .count-pill,[data-theme=dark] .ready-chip,[data-theme=dark] .code-button,[data-theme=dark] .notice,[data-theme=dark] .icon-button{border-radius:18px}
-[data-theme=dark] .turn-banner .tag{border-color:#737373;color:#fafafa}
-[data-theme=dark] .ready-chip.done{background:#262626;border-color:#303030;color:#fafafa}
-[data-theme=dark] .button.danger{background:#171717;border-color:#303030;color:#e7000b}
-[data-theme=dark] .little-tag,[data-theme=dark] footer{color:#a3a3a3}
-[data-theme=dark] #toast{background:#fafafa;color:#0a0a0a;box-shadow:0 4px 12px #0003}
-[data-theme=dark] .step.active .step-number{background:#fafafa;color:#0a0a0a}
-[data-theme=dark] .connection{color:#e7000b;border-color:#303030}
-[data-theme=dark] .dialog::backdrop{background:#0008}
-[data-theme] .player-card.guessed,[data-theme] .button.success{background:var(--raised);border-color:var(--line);color:var(--text)}
-[data-theme] .guessed .card-status{color:var(--text)}
 .avatar{position:relative;overflow:hidden}.avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit}
 .profile-button{padding:0;border:1px solid var(--line);background:var(--raised);color:var(--text);width:38px;height:38px;flex-shrink:0;border-radius:18px;overflow:hidden}
 .profile-button .avatar{width:100%;height:100%;border-radius:inherit}
 .profile-preview{display:flex;justify-content:center;margin:24px 0}.profile-preview .avatar{width:112px;height:112px;font-size:32px;border-radius:24px}
 .profile-form input[type=file]{padding:12px;font-size:14px}.profile-form .button-row{margin-top:24px}
 @media(max-width:600px){[data-theme=dark] .intro h1{font-size:48px}.header-right{gap:6px}.profile-button{width:32px;height:32px}.theme-switch button{padding:8px}.brand{font-size:14px}.brand-mark{width:28px;height:28px}}
+/* Tema de festa: roxo, papel claro e controles com relevo. */
+:root{color-scheme:light;--bg:#422275;--surface:#fff8e9;--raised:#eee5fb;--line:#cab8df;--text:#44266c;--muted:#7a6497;--lime:#ffcb66;--ink:#44266c;--green:#54b77b;--red:#d94362;font-family:'Trebuchet MS',Verdana,system-ui,sans-serif}
+body{background:#422275;background-image:radial-gradient(ellipse at 20% 0%,#7048a1 0%,transparent 65%);color:var(--text)}
+.site-header{border-bottom:2px solid #ffffff20;height:90px}.brand{color:#fff8e9;font-weight:900;letter-spacing:-.04em}.brand-mark{background:#ffcf6f;border-radius:14px;transform:rotate(-8deg);box-shadow:0 4px 0 #2e1755;color:#48256d}.header-right{gap:12px}#nick-label{color:#eee3ff}.header-right .icon-button{background:#ffffff18;border-color:#ffffff50;color:#fff}
+#app{padding-top:38px}.intro{color:#fff8e9}.intro h1{font-weight:900;font-size:clamp(56px,7vw,90px);line-height:1.02;text-shadow:0 6px 0 #291449;letter-spacing:-.055em}.intro p{color:#e7d8fa}.intro .eyebrow{color:#d7b8f5}.intro .tag{background:#ffffff12;color:#fff8e9;border-color:#ffffff40}.eyebrow{font-weight:800;letter-spacing:.08em;color:#9377af}
+.action-card,.main-panel,.sidebar,.dialog{background:#fff8e9;border:3px solid #2c1550;border-radius:24px;box-shadow:0 7px 0 #2c1550;padding:26px}.action-card.featured{background:#fff8e9;transform:none;color:#44266c;border-color:#2c1550}.action-card.featured p{color:#7a6497}.action-card h3,.panel-head h3{font-weight:900}.action-card p{color:#7a6497}.card-step{color:#ab88cf;font-weight:900}.big-symbol{background:#f0e4ff;color:#704498;border-radius:18px;transform:rotate(-7deg);border:2px solid #d8c2ee}
+h2,h3{font-weight:900;letter-spacing:-.03em}.room-title{color:#fff8e9}.room-title .eyebrow{color:#d7b8f5}.button{border-radius:12px;border:2px solid #432165;font-size:16px;font-weight:900;box-shadow:0 4px 0 #432165;min-height:48px;transition:transform .12s,box-shadow .12s}.button.primary,.button.dark{background:#ffcb66;color:#44266c}.button.primary:hover,.button.dark:hover{background:#ffdc90}.button.secondary{background:#eee4f8;color:#5b367b;border-color:#bd9bd8;box-shadow:0 4px 0 #bd9bd8}.button.secondary:hover{background:#e2d2f0}.button:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 #432165}.button.success{background:#bce8ca;color:#236944;border-color:#66aa80;box-shadow:0 4px 0 #66aa80}.button.danger{background:#ffe2e7;color:#ab2548;border-color:#d890a2;box-shadow:0 4px 0 #d890a2}
+input{background:#fff;color:#44266c;border:2px solid #cfb9e5;border-radius:12px;min-height:48px}input::placeholder{color:#a38ab6}input:focus{outline:3px solid #d9baf9;outline-offset:2px;border-color:#9062bd}.icon-button{color:#765098;border-color:#ccb3e0;background:#efe3fa}.dialog::backdrop{background:#26113cba;backdrop-filter:blur(4px)}.dialog .big-symbol{color:#63378a}.dialog .fine,.little-tag{color:#9478ac}
+.player-card,.room-list-item{background:#fff;border:2px solid #dac8eb;border-radius:18px}.room-list-item span,.room-list-item small{color:#806793}.player-card.turn{background:#fff0cc;border:3px solid #ffc55b;box-shadow:0 3px 0 #dfaa45}.player-card.guessed{background:#e4f4e8;border-color:#8fcc9e}.player-card.guessed .card-status{color:#357449}.player-header .player-nick .lime{color:#9862c7}.avatar,.avatar.a1,.avatar.a2,.avatar.a3{background:#e6d8f4;color:#765096;border:2px solid #cbb0e1;border-radius:16px}.avatar.a1{background:#ffe7c7;color:#a86a38}.avatar.a2{background:#dceee5;color:#4f866a}.avatar.a3{background:#f9ddeb;color:#a45b81}.identity{color:#512776;background:#f0e5fa;border-radius:12px;padding:14px;font-weight:900}.identity.hidden{color:#a58db8;background:#efe7f5}.card-status,.player-sub{color:#896c9d}.kick-button{color:#986eaf}.kick-button:hover{color:#ab2548;background:#ffe2e7}
+.lobby-message,.call-strip{background:#efe5fa;border:2px dashed #ceb4e3;border-radius:18px}.call-strip{color:#735287}.turn-banner .tag{background:#ffcb66;color:#44266c;border-color:#e0a442}.tag,.count-pill,.ready-chip{background:#ede1f6;color:#78538f;border-color:#d5bce7;font-weight:800}.ready-chip.done{background:#dcefe1;color:#467f56;border-color:#a8d5b5}.notice{background:#ede1f6;color:#6b418b;border-color:#c8a8e0}.step-number{background:#eee1f8;color:#88669e;border-color:#d8bfeb}.step.active .step-number{background:#ffcb66;color:#44266c;border-color:#deac4e}.sidebar-bottom{border-color:#decdec;color:#79568c}.sidebar-bottom strong{color:#4d2c6d}.wait-label,.finish-copy{color:#80658f}.finish-title .lime{color:#e9a940}.room-tools .button{background:#fff8e9}.rooms-message{color:#886b9a;border-color:#d5bce7;background:#f8f1fc}footer{color:#d9c4ef;border-color:#ffffff20}#toast{background:#fff8e9;color:#543175;border:2px solid #2c1550;border-radius:14px;box-shadow:0 4px 0 #2c1550}.connection{background:#fff8e9;color:#b02c50;border-color:#e6a3b3}.profile-button{background:#eee0fa;border:2px solid #cfb7e2;box-shadow:0 3px 0 #2c1550}.profile-button .avatar{border:0}.profile-preview .avatar{width:112px;height:112px;border-radius:24px}.profile-form input[type=file]{max-width:100%;font-size:14px}.button:focus-visible,a:focus-visible{outline:3px solid #ffcb66;outline-offset:5px}
+@media(max-width:600px){.site-header{height:76px;padding:0 18px}.brand{font-size:18px}.header-right{gap:9px}.brand-mark{width:32px;height:32px}#app{padding:28px 18px 42px}.action-card,.main-panel,.sidebar,.dialog{padding:20px}.intro h1{font-size:62px}.intro p{font-size:16px}.room-title h2{font-size:28px}.room-top{gap:16px}.room-list-item{padding:12px}.room-list-item .button{padding:10px 14px}.dialog{max-height:90dvh;overflow:auto}}

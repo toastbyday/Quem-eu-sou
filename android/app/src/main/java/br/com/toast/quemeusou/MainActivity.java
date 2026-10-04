@@ -17,8 +17,8 @@ public final class MainActivity extends Activity {
  private static final String HOST = "appassets.androidplatform.net";
  @Override public void onCreate(Bundle state) {
   super.onCreate(state);
-  getWindow().setStatusBarColor(Color.rgb(10,10,10));
-  getWindow().setNavigationBarColor(Color.rgb(10,10,10));
+  getWindow().setStatusBarColor(Color.rgb(66,34,117));
+  getWindow().setNavigationBarColor(Color.rgb(66,34,117));
   FrameLayout root = new FrameLayout(this);
   web = new WebView(this);
   root.addView(web, new FrameLayout.LayoutParams(-1,-1));
@@ -27,7 +27,7 @@ public final class MainActivity extends Activity {
    return insets.consumeSystemWindowInsets();
   });
   setContentView(root);
-  web.setBackgroundColor(Color.rgb(10,10,10));
+  web.setBackgroundColor(Color.rgb(66,34,117));
   WebSettings settings = web.getSettings();
   settings.setJavaScriptEnabled(true);
   settings.setDomStorageEnabled(true);

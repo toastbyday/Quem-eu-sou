@@ -8,15 +8,6 @@ const storage = {
   get(key) { try { return localStorage.getItem(`qes:${key}`); } catch { return null; } },
   set(key, value) { try { value == null ? localStorage.removeItem(`qes:${key}`) : localStorage.setItem(`qes:${key}`, value); } catch { /* A sessão continua, mesmo sem armazenamento. */ } },
 };
-function applyTheme(theme) {
-  const selected = theme === 'dark' ? 'dark' : 'light';
-  document.documentElement.dataset.theme = selected;
-  storage.set('theme', selected);
-  document.querySelectorAll('[data-theme-choice]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.themeChoice === selected)));
-  document.querySelector('meta[name="theme-color"]').content = selected === 'light' ? '#f5f5f5' : '#0a0a0a';
-}
-document.querySelectorAll('[data-theme-choice]').forEach(button => button.addEventListener('click', () => applyTheme(button.dataset.themeChoice)));
-applyTheme(document.documentElement.dataset.theme || 'light');
 let token = storage.get('token');
 if (!/^[0-9a-f]{64}$/.test(token || '')) {
   token = [...crypto.getRandomValues(new Uint8Array(32))].map(n => n.toString(16).padStart(2,'0')).join('');
@@ -316,7 +307,6 @@ $('#nick-form').onsubmit = async event => {
 };
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { poll(); refreshRooms(); } });
 window.addEventListener('online', poll);
-window.addEventListener('storage', event => { if (event.key === 'qes:theme') applyTheme(event.newValue); });
 setInterval(() => { if (!busy) poll(); }, 1800);
 setInterval(tick, 1000);
 setInterval(refreshRooms, 5000);
