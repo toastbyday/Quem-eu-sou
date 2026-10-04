@@ -12,6 +12,9 @@ import android.widget.FrameLayout;
 import androidx.webkit.WebViewAssetLoader;
 
 public final class MainActivity extends Activity {
+ private volatile boolean checkingVersion = false;
+ private long lastVersionCheck = 0;
+ private boolean redirecting = false;
  private WebView web;
  private ValueCallback<Uri[]> chooser;
  private static final String HOST = "appassets.androidplatform.net";
@@ -55,6 +58,40 @@ public final class MainActivity extends Activity {
    }
   });
   web.loadUrl("https://" + HOST + "/index.html");
+ }
+ @Override protected void onResume() {
+  super.onResume();
+  checkVersionSilently();
+ }
+ private void checkVersionSilently() {
+  if (checkingVersion || redirecting || System.currentTimeMillis()-lastVersionCheck < 30000) return;
+  checkingVersion=true; lastVersionCheck=System.currentTimeMillis();
+  new Thread(() -> {
+   javax.net.ssl.HttpsURLConnection connection=null;
+   try {
+    java.net.URL endpoint=new java.net.URL("https://quem-eu-sou-smoky.vercel.app/app-version.json");
+    connection=(javax.net.ssl.HttpsURLConnection)endpoint.openConnection();
+    connection.setConnectTimeout(4000); connection.setReadTimeout(4000); connection.setUseCaches(false);
+    connection.setRequestProperty("Cache-Control","no-cache");
+    if(connection.getResponseCode()!=200) return;
+    StringBuilder content=new StringBuilder();
+    try(java.io.Reader reader=new java.io.InputStreamReader(connection.getInputStream(),java.nio.charset.StandardCharsets.UTF_8)) {
+     char[] buffer=new char[512]; int n;
+     while((n=reader.read(buffer))!=-1) { content.append(buffer,0,n); if(content.length()>4096) return; }
+    }
+    int latest=new org.json.JSONObject(content.toString()).getInt("versionCode");
+    int installed=getPackageManager().getPackageInfo(getPackageName(),0).versionCode;
+    if(latest>installed) runOnUiThread(() -> {
+     if(isFinishing() || isDestroyed() || redirecting) return;
+     try {
+      redirecting=true;
+      startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse("https://quem-eu-sou-smoky.vercel.app/download.html")));
+      finish();
+     } catch(Exception ignored) { redirecting=false; }
+    });
+   } catch(Exception ignored) { /* Sem rede: continua sem interromper o jogo. */ }
+   finally { if(connection!=null) connection.disconnect(); checkingVersion=false; }
+  },"AppVersionCheck").start();
  }
  @Override protected void onActivityResult(int request, int result, Intent data) {
   super.onActivityResult(request,result,data);

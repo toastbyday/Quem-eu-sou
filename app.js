@@ -1,5 +1,6 @@
 const $ = selector => document.querySelector(selector);
 const app = $('#app');
+if (location.hostname === 'appassets.androidplatform.net') document.documentElement.classList.add('is-android');
 // A prévia local chama a função pública diretamente; no Vercel usa a API da mesma origem.
 const localPreview = ['localhost','127.0.0.1','terminal.local'].includes(location.hostname);
 const apiUrl = localPreview ? 'https://fezriztbwnxcvkwrbybc.supabase.co/functions/v1/quem-eu-sou' : '/api/game';

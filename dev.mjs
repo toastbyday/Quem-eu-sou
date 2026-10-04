@@ -1,7 +1,7 @@
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import handler from './api/game.js';
-const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml' };
+const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.json':'application/json', '.apk':'application/vnd.android.package-archive' };
 const portIndex = process.argv.indexOf('--port');
 const port = Number((portIndex >= 0 ? process.argv[portIndex + 1] : null) || process.env.PORT || 3000);
 http.createServer(async (req, res) => {
@@ -14,7 +14,7 @@ http.createServer(async (req, res) => {
     return handler(req, res);
   }
   const name = new URL(req.url, 'http://localhost').pathname;
-  const allowed = ['index.html', 'style.css', 'app.js', 'theme.js', 'favicon.svg'];
+  const allowed = ['index.html', 'style.css', 'app.js', 'theme.js', 'favicon.svg','download.html','app-version.json','downloads/Quem-eu-sou.apk'];
   const file = name === '/' ? 'index.html' : name.slice(1);
   if (!allowed.includes(file)) { res.writeHead(404).end('Não encontrado'); return; }
   try { res.setHeader('Content-Type', types[file.slice(file.lastIndexOf('.'))]); res.end(await readFile(file)); }
