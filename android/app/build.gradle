@@ -2,6 +2,22 @@ plugins { id 'com.android.application' }
 android {
  namespace 'br.com.toast.quemeusou'
  compileSdk 35
- defaultConfig { applicationId 'br.com.toast.quemeusou'; minSdk 23; targetSdk 35; versionCode 6; versionName '1.3.0' }
+ signingConfigs {
+  release {
+   if (System.getenv('QES_SIGNING_STORE')) {
+    storeFile file(System.getenv('QES_SIGNING_STORE'))
+    storePassword System.getenv('QES_SIGNING_PASSWORD')
+    keyAlias 'quem-eu-sou'
+    keyPassword System.getenv('QES_SIGNING_PASSWORD')
+   }
+  }
+ }
+ buildTypes {
+  release {
+   debuggable false
+   signingConfig signingConfigs.release
+  }
+ }
+ defaultConfig { applicationId 'br.com.toast.quemeusou'; minSdk 23; targetSdk 35; versionCode 7; versionName '1.3.1' }
 }
 dependencies { implementation 'androidx.webkit:webkit:1.12.1' }
