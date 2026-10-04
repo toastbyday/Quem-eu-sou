@@ -6,7 +6,7 @@ const apiUrl = localPreview ? 'https://fezriztbwnxcvkwrbybc.supabase.co/function
 const inviteCode = (new URLSearchParams(location.search).get('sala') || '').trim().toUpperCase();
 const validInvite = /^[0-9A-F]{6}$/.test(inviteCode);
 function roomInviteUrl(code) {
-  const origin = location.hostname === 'appassets.androidplatform.net' || localPreview ? 'https://quem-eu-sou.vercel.app' : location.origin;
+  const origin = location.hostname === 'appassets.androidplatform.net' || localPreview ? 'https://quem-eu-sou-smoky.vercel.app' : location.origin;
   const url = new URL('/', origin); url.searchParams.set('sala', code); return url.href;
 }
 const escape = value => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));

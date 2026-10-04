@@ -5,10 +5,10 @@ import vm from 'node:vm';
 const source = readFileSync(new URL('../app.js',import.meta.url),'utf8');
 const fn = source.slice(source.indexOf('function roomInviteUrl('),source.indexOf('const escape ='));
 test('Convites do site e Android abrem no site sem transportar a sessão', () => {
- for (const hostname of ['quem-eu-sou.vercel.app','appassets.androidplatform.net']) {
+ for (const hostname of ['quem-eu-sou-smoky.vercel.app','appassets.androidplatform.net']) {
   const context = vm.createContext({ URL, location:{hostname,origin:'https://'+hostname},localPreview:false });
   vm.runInContext(fn,context);
-  assert.equal(context.roomInviteUrl('ABC123'),'https://quem-eu-sou.vercel.app/?sala=ABC123');
+  assert.equal(context.roomInviteUrl('ABC123'),'https://quem-eu-sou-smoky.vercel.app/?sala=ABC123');
  }
 });
 test('Fim de rodada mostra a própria identidade e a partida mantém o segredo', () => {
