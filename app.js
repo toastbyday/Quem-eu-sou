@@ -3,6 +3,12 @@ const app = $('#app');
 // A prévia local chama a função pública diretamente; no Vercel usa a API da mesma origem.
 const localPreview = ['localhost','127.0.0.1','terminal.local'].includes(location.hostname);
 const apiUrl = localPreview ? 'https://fezriztbwnxcvkwrbybc.supabase.co/functions/v1/quem-eu-sou' : '/api/game';
+const inviteCode = (new URLSearchParams(location.search).get('sala') || '').trim().toUpperCase();
+const validInvite = /^[0-9A-F]{6}$/.test(inviteCode);
+function roomInviteUrl(code) {
+  const origin = location.hostname === 'appassets.androidplatform.net' || localPreview ? 'https://quem-eu-sou.vercel.app' : location.origin;
+  const url = new URL('/', origin); url.searchParams.set('sala', code); return url.href;
+}
 const escape = value => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
 const storage = {
   get(key) { try { return localStorage.getItem(`qes:${key}`); } catch { return null; } },
@@ -240,7 +246,7 @@ function render() {
   if (!room) app.innerHTML = home();
   else {
     const title = room.phase === 'lobby' ? 'A galera reunida.' : `Rodada ${room.round}<span class="lime">.</span>`;
-    app.innerHTML = `${lostConnection ? '<div class="connection" id="connection-warning">Tentando reconectar… Aguarde antes de jogar sua vez.</div>' : ''}<div class="room-top"><div class="room-title"><span class="eyebrow">${room.phase === 'lobby' ? 'SUA SALA' : 'QUEM EU SOU?'}</span><h2>${title}</h2></div><div class="room-tools"><button class="button secondary" data-action="leave">Sair</button></div></div>
+    app.innerHTML = `${lostConnection ? '<div class="connection" id="connection-warning">Tentando reconectar… Aguarde antes de jogar sua vez.</div>' : ''}<div class="room-top"><div class="room-title"><span class="eyebrow">${room.phase === 'lobby' ? 'SUA SALA' : 'QUEM EU SOU?'}</span><h2>${title}</h2></div><div class="room-tools">${room.host === room.me ? '<button class="button primary" id="copy-invite">Copiar convite</button>' : ''}<button class="button secondary" data-action="leave">Sair</button></div></div>
       <div class="room-layout">${({ lobby, choosing, playing, finished }[room.phase] || lobby)()}${sidebar()}</div>`;
   }
   values.forEach(saved => {
@@ -266,6 +272,11 @@ function bind() {
     await act(action, action === 'create' ? { nick } : action === 'join' ? { code: button.dataset.code, nick } : action === 'kick' ? { target: button.dataset.target } : {});
     if (!room) refreshRooms();
   });
+  if ($('#copy-invite')) $('#copy-invite').onclick = async () => {
+    const link = roomInviteUrl(room.code);
+    try { await navigator.clipboard.writeText(link); toast('Convite copiado! Envie para seus amigos.'); }
+    catch { $('#invite-link').value = link; $('#invite-dialog').showModal(); $('#invite-link').focus(); $('#invite-link').select(); }
+  };
   if ($('#assign-form')) $('#assign-form').onsubmit = async event => {
     event.preventDefault();
     await act('assign', { identity: $('#identity-input').value.trim() });
@@ -296,6 +307,16 @@ $('#nick-form').onsubmit = async event => {
   $('#nick-label').textContent = nick;
   refreshProfile();
   $('#nick-dialog').close();
+  if (validInvite) {
+    setBusy(true);
+    try {
+      update(await api('join', { code: inviteCode, nick }));
+      history.replaceState(null, '', location.pathname);
+      toast('Você entrou na sala do convite!');
+    } catch (error) { toast(error.message); }
+    finally { setBusy(false); }
+    refreshRooms(); return;
+  }
   const code = storage.get('room');
   if (/^[A-F0-9]{6}$/.test(code || '')) {
     setBusy(true);
@@ -357,3 +378,5 @@ $('#profile-form').onsubmit = async event => {
   finally { setBusy(false); $('#save-profile').disabled = false; }
 };
 refreshProfile();
+
+$('#close-invite').onclick = () => $('#invite-dialog').close();

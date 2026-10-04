@@ -2,6 +2,6 @@ plugins { id 'com.android.application' }
 android {
  namespace 'br.com.toast.quemeusou'
  compileSdk 35
- defaultConfig { applicationId 'br.com.toast.quemeusou'; minSdk 23; targetSdk 35; versionCode 3; versionName '1.1.1' }
+ defaultConfig { applicationId 'br.com.toast.quemeusou'; minSdk 23; targetSdk 35; versionCode 4; versionName '1.2.0' }
 }
 dependencies { implementation 'androidx.webkit:webkit:1.12.1' }
